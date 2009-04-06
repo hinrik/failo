@@ -10,7 +10,7 @@ use Net::Twitter;
 use YAML qw(LoadFile);
 
 our $VERSION = '0.01';
-my %names = %{ LoadFile('map_names.yml') };
+my %nicks = %{ LoadFile('map_names.yml') };
 
 sub new {
     my ($package, %args) = @_;
