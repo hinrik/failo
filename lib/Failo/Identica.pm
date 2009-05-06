@@ -7,10 +7,13 @@ use POE::Component::IRC '6.06';
 use POE::Component::IRC::Common qw(parse_user irc_to_utf8);
 use POE::Component::IRC::Plugin qw(:ALL);
 use Net::Twitter;
-use YAML qw(LoadFile);
+use YAML::Any qw(LoadFile);
 
 our $VERSION = '0.01';
 my %nicks = %{ LoadFile('map_names.yml') };
+
+my $identica_pass = qx/cat identica_pass.txt/;
+chomp $identica_pass;
 
 sub new {
     my ($package, %args) = @_;
@@ -40,7 +43,7 @@ sub PCI_register {
     $self->{irc} = $irc;
     $self->{twit} = Net::Twitter->new(
         username => 'failo',
-        password => '',
+        password => $identica_pass,
         identica => 1,
     );
     $self->{queue} = [ ];
