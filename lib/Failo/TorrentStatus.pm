@@ -57,12 +57,6 @@ sub _start {
         $session->postback("watch_handler"),
     ) or die "Unable to watch dir: $!";
 
-#    $self->{inotify}->watch(
-#        "/home/leech/torrent/files",
-#        IN_CREATE,
-#        $session->postback("watch_handler"),
-#    ) or die "Unable to watch dir: $!";
-
     my $inotify_FH;
     open $inotify_FH, '<&=', $self->{inotify}->fileno or die "Can't fdopen: $!\n";
     $kernel->select_read($inotify_FH, 'inotify_poll');
@@ -80,8 +74,9 @@ sub watch_handler {
     my $name = fileparse($event->fullname());
 
     return if $name !~ s/\.torrent$//;
-    
-    my $msg = DARK_BLUE.'Enqueued'.NORMAL.' torrent '.ORANGE.$name.NORMAL;
+
+    my $user = getpwuid((stat $event->fullname())[4]);
+    my $msg = DARK_BLUE.'Enqueued'.NORMAL.' torrent '.ORANGE.$name.NORMAL." by $user";
     my $channels = $irc->channels();
     $irc->yield(notice => $_, $msg) for grep { $_ ne '#failo' } keys %$channels;
 }
