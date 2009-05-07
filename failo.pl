@@ -11,6 +11,10 @@ use POE::Component::IRC::Plugin::MegaHAL;
 use Failo::Identica;
 use Failo::Translator;
 use Failo::Resolver;
+use Fcntl ':flock';
+
+open my $self, '<', $0 or die "Couldn't open self: $!";
+flock $self, LOCK_EX | LOCK_NB or die "This script is already running";
 
 my $irc_pass = qx/cat bouncer_pass.txt/;
 chomp $irc_pass;
