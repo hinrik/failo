@@ -32,7 +32,7 @@ sub PCI_register {
         die __PACKAGE__ . "requires an active BotCommand plugin\n";
     }
     $botcmd->add(dent => 'Usage: dent <quote>');
-    $botcmd->add(dent => 'Usage: undent');
+    $botcmd->add(undent => 'Usage: undent');
     
     POE::Session->create(
         object_states => [
@@ -92,7 +92,7 @@ sub _pop_queue {
 sub S_botcmd_dent {
     my ($self, $irc) = splice @_, 0, 2;
     my $nick  = parse_user( ${ $_[0] } );
-    my $chan  = ${ $_[1] }->[0];
+    my $chan  = ${ $_[1] };
     my $quote = ${ $_[2] };
 
     if (length $quote <= 140) {
