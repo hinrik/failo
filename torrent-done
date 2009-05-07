@@ -1,0 +1,26 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use List::Util 'first';
+
+my ($file, $content) = @ARGV;
+chdir '/home/leech/f';
+
+if (-d $content) {
+    my @files = sort grep { chomp; /\.r(?:ar|\d+)$/ } qx/find '$content'/;
+
+    if (@files) {
+        my $target;
+        if (my ($rar) = first { /\.rar$/ } @files) {
+            $target = $rar;
+        }
+        else {
+            $target = $files[0];
+        }
+
+        system "unrar x -o+ '$target' && rm -rf '$content'";
+    }
+}
+
+system "echo '$file' >> /home/hinrik/src/failo/torrentlog";
