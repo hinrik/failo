@@ -53,7 +53,7 @@ sub _start {
 
     $self->{inotify}->watch(
         "/home/leech/torrent/queue",
-        IN_CREATE,
+        IN_CREATE|IN_MOVED_TO,
         $session->postback("watch_handler"),
     ) or die "Unable to watch dir: $!";
 
