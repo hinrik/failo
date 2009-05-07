@@ -11,6 +11,7 @@ use POE::Component::IRC::Plugin::MegaHAL;
 use Failo::Identica;
 use Failo::Translator;
 use Failo::Resolver;
+use Failo::TorrentStatus;
 use Fcntl ':flock';
 
 open my $self, '<', $0 or die "Couldn't open self: $!";
@@ -38,6 +39,7 @@ $irc->plugin_add('BotCommand', POE::Component::IRC::Plugin::BotCommand->new(
 $irc->plugin_add('Identica', Failo::Identica->new());
 $irc->plugin_add('Translator', Failo::Translator->new());
 $irc->plugin_add('Resolver', Failo::Resolver->new());
+$irc->plugin_add('TorrentStatus', Failo::TorrentStatus->new());
 
 $irc->plugin_add('MegaHAL', POE::Component::IRC::Plugin::MegaHAL->new(
     Own_channel    => '#failo',
