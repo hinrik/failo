@@ -89,8 +89,11 @@ sub watch_handler {
 sub S_tail_input {
     my ($self, $irc) = splice @_, 0, 2;
     my $name = fileparse(${ $_[1] });
+    $name =~ s/\.torrent$//;
+
     my $msg = DARK_GREEN.'Finished'.NORMAL.' torrent '.ORANGE.$name.NORMAL;
     my $channels = $irc->channels();
     $irc->yield(notice => $_, $msg) for grep { $_ ne '#failo' } keys %$channels;
+
     return PCI_EAT_NONE;
 }
