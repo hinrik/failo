@@ -19,7 +19,7 @@ if (-d $content) {
             $target = $files[0];
         }
 
-        system "unrar x -o+ '$target' && rm -rf '$content'";
+        system "unrar x -o+ '$target'";
     }
 }
 
