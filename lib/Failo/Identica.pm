@@ -97,7 +97,7 @@ sub S_botcmd_dent {
     my $quote = ${ $_[2] };
 
     if (length $quote > 140) {
-        $irc->yield(notice => $chan, "$nick: That quote is over 140 chars long. Please shorten it.");
+        $irc->yield(notice => $chan, "$nick: That quote is too long (>140 characters).");
         return PCI_EAT_NONE;
     }
 
@@ -131,7 +131,7 @@ sub S_botcmd_undent {
         $poe_kernel->call($self->{session_id}, '_pop_queue');
     }
     else {
-        $irc->yield(notice => $chan, "$nick: There are no quotes in the queue.");
+        $irc->yield(notice => $chan, "$nick: There are no quotes about to be uploaded.");
     }
 
     return PCI_EAT_NONE;
