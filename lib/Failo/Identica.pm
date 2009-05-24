@@ -7,6 +7,7 @@ use POE::Component::IRC '6.06';
 use POE::Component::IRC::Common qw(parse_user irc_to_utf8);
 use POE::Component::IRC::Plugin qw(:ALL);
 use Net::Twitter;
+use String::Approx qw(adist);
 use YAML::Any qw(LoadFile);
 
 our $VERSION = '0.01';
@@ -95,15 +96,24 @@ sub S_botcmd_dent {
     my $chan  = ${ $_[1] };
     my $quote = ${ $_[2] };
 
-    if (length $quote <= 140) {
-        my $topic_info = $irc->channel_topic($chan);
-        my $topic = $topic_info->{Value};
-        $irc->yield(topic => $chan, "$quote | $topic");
-        $poe_kernel->post($self->{session_id}, _push_queue => $quote);
-    }
-    else {
+    if (length $quote > 140) {
         $irc->yield(notice => $chan, "$nick: That quote is over 140 chars long. Please shorten it.");
+        return PCI_EAT_NONE;
     }
+
+    if ($self->{last_quote}) {
+        my $dist = adist($self->{last_quote}, $quote);
+        if ($dist > -5 && $dist < 5) {
+            $irc->yield(notice => $chan, "$nick: I just added that quote.");
+            return PCI_EAT_NONE;
+        }
+    }
+
+    $self->{last_quote} = $quote;
+    my $topic_info = $irc->channel_topic($chan);
+    my $topic = $topic_info->{Value};
+    $irc->yield(topic => $chan, "$quote | $topic");
+    $poe_kernel->post($self->{session_id}, _push_queue => $quote);
     return PCI_EAT_NONE;
 }
 
@@ -117,6 +127,7 @@ sub S_botcmd_undent {
         my $topic = $topic_info->{Value};
         $topic =~ s/^.*? | //;
         $irc->yield(topic => $chan, $topic);
+        delete $self->{last_quote};
         $poe_kernel->call($self->{session_id}, '_pop_queue');
     }
     else {
