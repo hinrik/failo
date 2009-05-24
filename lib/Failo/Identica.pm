@@ -70,7 +70,7 @@ sub _start {
 sub _push_queue {
     my ($kernel, $self, $quote) = @_[KERNEL, OBJECT, ARG0];
     push @{ $self->{queue} }, $quote;
-    $kernel->delay_add(_shift_queue => 10);
+    $kernel->delay_add(_shift_queue => 30);
 }
 
 sub _shift_queue {
