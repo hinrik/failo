@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use lib 'lib';
 use POE;
+use POE::Component::AI::MegaHAL;
 use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::BotCommand;
 use POE::Component::IRC::Plugin::Connector;
@@ -15,6 +16,8 @@ use Fcntl ':flock';
 
 open my $self, '<', $0 or die "Couldn't open self: $!";
 flock $self, LOCK_EX | LOCK_NB or die "This script is already running";
+
+my $megahal = POE::Component::AI::MegaHAL->spawn(alias => 'megahal');
 
 my $irc_pass = qx/cat bouncer_pass.txt/;
 chomp $irc_pass;
@@ -43,6 +46,7 @@ for my $network (qw(freenode magnet)) {
 
     $irc->plugin_add('MegaHAL', POE::Component::IRC::Plugin::MegaHAL->new(
         ($network eq 'freenode' ? (Own_channel => '#failo') : ()),
+        MegaHAL        => $megahal,
         Abuse_interval => 0,
         Talkative      => 1,
         Ignore_regexes => [
@@ -55,7 +59,7 @@ for my $network (qw(freenode magnet)) {
 POE::Session->create(
     inline_states => {
         _start => sub { $poe_kernel->sig(INT => '_int'); $_->yield('connect') for values %ircs },
-        _int   => sub { $_->yield('shutdown') for values %ircs },
+        _int   => sub { $_->yield('shutdown') for values %ircs; $poe_kernel->post(megahal => 'shutdown') },
     }
 );
 
