@@ -77,7 +77,7 @@ sub _shift_queue {
     my $self = $_[OBJECT];
     while (my $quote = shift @{ $self->{queue} }) {
         while (my ($old, $new) = each %nicks) {
-            $quote =~ s/\b\Q$old\E\b/$new/gi;
+            $quote =~ s/\b\Q$old\E_*\b/$new/gi;
         }
         $self->{twit}->update(irc_to_utf8($quote));
     }
