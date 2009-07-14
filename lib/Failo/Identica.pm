@@ -125,8 +125,9 @@ sub S_botcmd_undent {
     if (@{ $self->{queue} }) {
         my $topic_info = $irc->channel_topic($chan);
         my $topic = $topic_info->{Value};
-        $topic =~ s/^.*? | //;
+        $topic =~ s/^\Q$self->{last_quote}\E \| //;
         $irc->yield(topic => $chan, $topic);
+
         delete $self->{last_quote};
         $poe_kernel->call($self->{session_id}, '_pop_queue');
     }
