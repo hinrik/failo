@@ -7,6 +7,7 @@ use POE::Component::IRC '6.06';
 use POE::Component::IRC::Common qw(parse_user irc_to_utf8);
 use POE::Component::IRC::Plugin qw(:ALL);
 use Net::Twitter;
+use Scalar::Util qw(blessed);
 use String::Approx qw(adist);
 use YAML::Any qw(LoadFile);
 
@@ -45,6 +46,7 @@ sub PCI_register {
     $self->{twit} = Net::Twitter->new(
         username => 'failo',
         password => $identica_pass,
+        traits   => ['API::REST'],
         identica => 1,
     );
     $self->{queue} = [ ];
@@ -76,10 +78,25 @@ sub _push_queue {
 sub _shift_queue {
     my $self = $_[OBJECT];
     while (my $quote = shift @{ $self->{queue} }) {
+        my ($chan, $text) = @$quote;
+        $text = irc_to_utf8($text);
         while (my ($old, $new) = each %nicks) {
-            $quote =~ s/\b\Q$old\E_*\b/$new/gi;
+            $text =~ s/\b\Q$old\E_*\b/$new/gi;
         }
-        $self->{twit}->update(irc_to_utf8($quote));
+
+        # post the quote as a status update
+        eval {
+            $self->{twit}->update($text);
+        };
+        if ($@) {
+            my ($short) = $text =~ /.{0,15}/;
+            $self->{irc}->yield(notice => $chan, "Failed to post quote '$short...'");
+
+            die $@ unless blessed($@) and $@->isa('Net::Twitter::Error');
+            warn "HTTP Response Code: ", $@->code(), "\n",
+                "HTTP Message......: ", $@->message(), "\n",
+                "Twitter error.....: ", $@->error(), "\n";
+        }
     }
 }
 
@@ -113,7 +130,7 @@ sub S_botcmd_dent {
     my $topic_info = $irc->channel_topic($chan);
     my $topic = $topic_info->{Value};
     $irc->yield(topic => $chan, "$quote | $topic");
-    $poe_kernel->post($self->{session_id}, _push_queue => $quote);
+    $poe_kernel->post($self->{session_id}, _push_queue => [$chan, $quote]);
     return PCI_EAT_NONE;
 }
 
