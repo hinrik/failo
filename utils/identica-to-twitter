@@ -1,0 +1,101 @@
+#!/usr/bin/env perl
+
+# Gets all of failo's twats from ideni.ca/twatter
+
+use feature ':5.10';
+use strict;
+use warnings;
+use Net::Twitter;
+use Scalar::Util qw(blessed);
+
+my $failo_pass = do {
+    chomp(my $pass = qx[sudo cat /home/hinrik/src/failo/identica_pass.txt]);
+    $pass;
+};
+
+my $dent = Net::Twitter->new(
+    traits => ['API::REST'],
+    username => 'failo',
+    password => $failo_pass,
+    identica => 1,
+);
+
+my @status;
+
+my $page = 1;
+while (1) {
+    my $count = @status;
+    eval {
+        my $statuses = $dent->user_timeline({ count => 100, page => $page });
+        for my $status ( @$statuses ) {
+            # Correctly handle the Icelandic
+            utf8::encode($status->{text});
+
+            #print "<$status->{user}{screen_name}> $status->{text}\n";
+            push @status => $status->{text};
+        }
+    };
+    if ( my $err = $@ ) {
+        die $@ unless blessed $err && $err->isa('Net::Twitter::Error');
+
+        warn
+        "HTTP Response Code: ", $err->code, "\n",
+        "HTTP Message......: ", $err->message, "\n",
+        "Twitter error.....: ", $err->error, "\n";
+    }
+
+
+    if ($count == @status) {
+        # All done
+        last;
+    }
+
+    $page ++;
+}
+
+# Spew it all out
+#say for @status;
+
+# Chronological order
+@status = reverse @status;
+
+
+my $twat = Net::Twitter->new(
+    traits => ['API::REST'],
+    username => 'failofailo',
+    password => $failo_pass,
+);
+
+my $twats = @status;
+warn "Transferring $twats twats from identi.ca to twitter.com";
+
+for my $num (1 .. $twats) {
+    my $long = $status[$num - 1];
+    my ($short) = $long =~ /(.{0,15})/;
+    my $time = localtime;
+    say "$time: Transferring twat $num/$twats: $short";
+    TRY: for my $try (1 .. 3) {
+        local $@;
+        eval {
+            $twat->update( $long );
+        };
+        if ($@) {
+            die $@ unless blessed($@) and $@->isa('Net::Twitter::Error');
+
+            warn "HTTP Response Code: ", $@->code(), "\n",
+            "HTTP Message......: ", $@->message(), "\n",
+            "Twitter error.....: ", $@->error(), "\n";
+
+            warn "Failed try $try/3 to post twat $num/$twats";
+            sleep 30;
+            next TRY;
+        } else {
+            # Great succes
+            last TRY;
+        }
+    }
+
+    # Sleep for 20..40 minutes, 30 on average
+    my $twenty_to_thirty = int rand 20;
+    sleep $twenty_to_thirty * 60;
+}
