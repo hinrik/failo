@@ -58,7 +58,7 @@ while (1) {
 
 my $twat = Net::Twitter->new(
     traits => ['API::REST'],
-    username => 'failo',
+    username => 'failofailo',
     password => $failo_pass,
 );
 
