@@ -17,6 +17,8 @@ my %nicks = %{ LoadFile('map_names.yml') };
 my $identica_pass = qx/cat identica_pass.txt/;
 chomp $identica_pass;
 
+my @quotes = @{ LoadFile('quotes.yml') || [] };
+
 sub new {
     my ($package, %args) = @_;
     return bless \%args, $package;
@@ -83,6 +85,10 @@ sub _shift_queue {
         while (my ($old, $new) = each %nicks) {
             $text =~ s/\b\Q$old\E_*\b/$new/gi;
         }
+
+        # save the quote locally
+        push @quotes, $text;
+        DumpFile('quotes.yml', \@quotes);
 
         # post the quote as a status update
         eval {
