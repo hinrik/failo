@@ -64,6 +64,7 @@ my $twat = Net::Twitter->new(
     traits => ['API::REST'],
     username => 'failofailo',
     password => $failo_pass,
+    clientname => 'failo',
 );
 
 my $twats = @status;
