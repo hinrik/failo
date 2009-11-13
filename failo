@@ -48,7 +48,7 @@ for my $network (qw(freenode magnet)) {
         ($network eq 'freenode' ? (Own_channel => '#failo') : ()),
         MegaHAL        => $megahal,
         Abuse_interval => 0,
-        Talkative      => 1,
+        English        => 1,
         Ignore_regexes => [
             qr{\w+://\w},   # ignore lines containing urls
         ],
