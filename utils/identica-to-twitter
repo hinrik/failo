@@ -56,6 +56,10 @@ while (1) {
 # Spew it all out
 #say for @status;
 
+# Chronological order
+@status = reverse @status;
+
+
 my $twat = Net::Twitter->new(
     traits => ['API::REST'],
     username => 'failofailo',
@@ -65,9 +69,9 @@ my $twat = Net::Twitter->new(
 my $twats = @status;
 warn "Transferring $twats twats from identi.ca to twitter.com";
 
-for my $num (0 .. ($twats-1)) {
-    my $long = $status[$num];
-    my ($short) = $long =~ /.{0,15}/;
+for my $num (1 .. $twats) {
+    my $long = $status[$num - 1];
+    my ($short) = $long =~ /(.{0,15})/;
     my $time = localtime;
     say "$time: Transferring twat $num/$twats: $short";
     TRY: for my $try (1 .. 3) {
