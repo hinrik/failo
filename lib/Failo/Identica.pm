@@ -132,9 +132,15 @@ sub S_botcmd_dent {
         }
     }
 
-    $self->{last_quote} = $quote;
     my $topic_info = $irc->channel_topic($chan);
     my $topic = $topic_info->{Value};
+
+    if ($topic =~ /$quote/i) {
+        $irc->yield(notice => $chan, "$nick: I've already added that quote.");
+        return PCI_EAT_NONE;
+    }
+
+    $self->{last_quote} = $quote;
     $irc->yield(topic => $chan, "$quote | $topic");
     $poe_kernel->post($self->{session_id}, _push_queue => [$chan, $quote]);
     return PCI_EAT_NONE;
