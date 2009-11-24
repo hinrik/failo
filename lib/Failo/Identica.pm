@@ -48,6 +48,7 @@ sub PCI_register {
     $self->{twit} = Net::Twitter->new(
         username => 'failo',
         password => $identica_pass,
+        source   => 'failo',
         traits   => ['API::REST'],
         identica => 1,
     );
