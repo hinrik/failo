@@ -46,11 +46,13 @@ sub PCI_register {
 
     $self->{irc} = $irc;
     $self->{twit} = Net::Twitter->new(
-        username => 'failo',
-        password => $identica_pass,
-        source   => 'failo',
-        traits   => ['API::REST'],
-        identica => 1,
+        username   => 'failo',
+        password   => $identica_pass,
+        source     => 'failo',
+        traits     => ['API::REST'],
+        identica   => 1,
+        clientname => 'failo IRC bot',
+        clienturl  => 'http://github.com/hinrik/failo',
     );
     $self->{queue} = [ ];
     $irc->plugin_register($self, 'SERVER', qw(botcmd_dent botcmd_undent));
