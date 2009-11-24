@@ -39,14 +39,15 @@ my @twat = map { $_->[1] } @twat_raw;
 say "Got " . scalar(@dent) . " dents from identi.ca and " . scalar(@twat) . " twats from twitter";
 
 {
+my $time = time;
 # For review
-open my $d, ">", "/tmp/dent.txt" or die "Can't open /tmp/dent.txt: $!";
+open my $d, ">", "/tmp/failo-dent-$time.txt" or die "Can't open /tmp/dent.txt: $!";
 for (map { "http://identi.ca/notice/$_->[0]\t$_->[1]"} @dent_raw) {
     say $d $_;
 }
 close $d;
 
-open my $t, ">", "/tmp/twat.txt" or die "Can't open /tmp/twat.txt: $!";
+open my $t, ">", "/tmp/failo-twat-$time.txt" or die "Can't open /tmp/twat.txt: $!";
 for (map { "http://twitter.com/failofailo/status/$_->[0]\t$_->[1]"} @twat_raw) {
     say $t $_;
 }
