@@ -49,6 +49,7 @@ for my $network (qw(freenode magnet)) {
         MegaHAL        => $megahal,
         Abuse_interval => 0,
         English        => 1,
+        Talkative      => 1,
         Ignore_regexes => [
             qr{\w+://\w},   # ignore lines containing urls
         ],
