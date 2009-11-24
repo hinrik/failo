@@ -31,10 +31,27 @@ my $twat = Net::Twitter->new(
     clientname => 'failo',
 );
 
-my @dent = reverse get_all_statuses($dent);
-my @twat = map { s/&lt;/</g; s/&gt;/>/g; $_ } reverse get_all_statuses($twat);
+my @dent_raw = reverse get_all_statuses($dent);
+my @twat_raw = map { $_->[1] =~ s/&lt;/</g; $_->[1] =~ s/&gt;/>/g; $_ } reverse get_all_statuses($twat);
+my @dent = map { $_->[1] } @dent_raw;
+my @twat = map { $_->[1] } @twat_raw;
 
 say "Got " . scalar(@dent) . " dents from identi.ca and " . scalar(@twat) . " twats from twitter";
+
+{
+# For review
+open my $d, ">", "/tmp/dent.txt" or die "Can't open /tmp/dent.txt: $!";
+for (map { "http://identi.ca/notice/$_->[0]\t$_->[1]"} @dent_raw) {
+    say $d $_;
+}
+close $d;
+
+open my $t, ">", "/tmp/twat.txt" or die "Can't open /tmp/twat.txt: $!";
+for (map { "http://twitter.com/failofailo/status/$_->[0]\t$_->[1]"} @twat_raw) {
+    say $t $_;
+}
+close $t;
+}
 
 my $diff = Array::Diff->diff( \@twat, \@dent );
 my $d_add = $diff->added;
@@ -99,7 +116,7 @@ sub get_all_statuses
                 utf8::encode($status->{text});
 
                 #print "<$status->{user}{screen_name}> $status->{text}\n";
-                push @status => $status->{text};
+                push @status => [ $status->{id}, $status->{text} ];
             }
         };
         if ( my $err = $@ ) {
