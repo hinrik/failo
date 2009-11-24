@@ -7,6 +7,10 @@ use strict;
 use warnings;
 use Net::Twitter;
 use Scalar::Util qw(blessed);
+use Array::Diff;
+use Data::Dump 'dump';
+
+my $fo_shizzle = (@ARGV and $ARGV[0] =~ /fo-shizzle/);
 
 my $failo_pass = do {
     chomp(my $pass = qx[sudo cat /home/hinrik/src/failo/identica_pass.txt]);
@@ -20,60 +24,41 @@ my $dent = Net::Twitter->new(
     identica => 1,
 );
 
-my @status;
-
-my $page = 1;
-while (1) {
-    my $count = @status;
-    eval {
-        my $statuses = $dent->user_timeline({ count => 100, page => $page });
-        for my $status ( @$statuses ) {
-            # Correctly handle the Icelandic
-            utf8::encode($status->{text});
-
-            #print "<$status->{user}{screen_name}> $status->{text}\n";
-            push @status => $status->{text};
-        }
-    };
-    if ( my $err = $@ ) {
-        die $@ unless blessed $err && $err->isa('Net::Twitter::Error');
-
-        warn
-        "HTTP Response Code: ", $err->code, "\n",
-        "HTTP Message......: ", $err->message, "\n",
-        "Twitter error.....: ", $err->error, "\n";
-    }
-
-
-    if ($count == @status) {
-        # All done
-        last;
-    }
-
-    $page ++;
-}
-
-# Spew it all out
-#say for @status;
-
-# Chronological order
-@status = reverse @status;
-
-
 my $twat = Net::Twitter->new(
     traits => ['API::REST'],
     username => 'failofailo',
     password => $failo_pass,
+    clientname => 'failo',
 );
 
-my $twats = @status;
-warn "Transferring $twats twats from identi.ca to twitter.com";
+my @dent = reverse get_all_statuses($dent);
+my @twat = map { s/&lt;/</g; s/&gt;/>/g; $_ } reverse get_all_statuses($twat);
+
+say "Got " . scalar(@dent) . " dents from identi.ca and " . scalar(@twat) . " twats from twitter";
+
+my $diff = Array::Diff->diff( \@twat, \@dent );
+my $d_add = $diff->added;
+my $d_del = $diff->deleted;
+
+if (@$d_del) {
+    die "There shouldn't be anything on twitter that's not on identi.ca, this was on twitter but not identi.ca" . dump($d_del);
+}
+
+say "Syncing " . @$d_add . " notices to twitter from identi.ca";
+say " * $_" for @$d_add;
+
+unless ($fo_shizzle) {
+    say "run the script again with --fo-shizzle to really sync";
+    exit 1;
+}
+
+my $twats = @$d_add;
 
 for my $num (1 .. $twats) {
-    my $long = $status[$num - 1];
-    my ($short) = $long =~ /(.{0,15})/;
+    my $long = $d_add->[$num - 1];
     my $time = localtime;
-    say "$time: Transferring twat $num/$twats: $short";
+    say "$time: Transferring twat $num/$twats: $long";
+
     TRY: for my $try (1 .. 3) {
         local $@;
         eval {
@@ -95,7 +80,45 @@ for my $num (1 .. $twats) {
         }
     }
 
-    # Sleep for 20..40 minutes, 30 on average
-    my $twenty_to_thirty = int rand 20;
-    sleep $twenty_to_thirty * 60;
+    #my $sleep = int rand 20;
+    #sleep $sleep * 60;
+}
+
+sub get_all_statuses
+{
+    my $twat = shift;
+    my @status;
+
+    my $page = 1;
+    while (1) {
+        my $count = @status;
+        eval {
+            my $statuses = $twat->user_timeline({ count => 100, page => $page });
+            for my $status ( @$statuses ) {
+                # Correctly handle the Icelandic
+                utf8::encode($status->{text});
+
+                #print "<$status->{user}{screen_name}> $status->{text}\n";
+                push @status => $status->{text};
+            }
+        };
+        if ( my $err = $@ ) {
+            die $@ unless blessed $err && $err->isa('Net::Twitter::Error');
+
+            warn
+            "HTTP Response Code: ", $err->code, "\n",
+            "HTTP Message......: ", $err->message, "\n",
+            "Twitter error.....: ", $err->error, "\n";
+        }
+
+
+        if ($count == @status) {
+            # All done
+            last;
+        }
+
+        $page ++;
+    }
+
+    @status;
 }

@@ -96,7 +96,7 @@ sub _shift_queue {
             $self->{twit}->update($text);
         };
         if ($@) {
-            my ($short) = $text =~ /(.{0,15})/;
+            my ($short) = $text =~ /(.{0,50})/;
             $self->{irc}->yield(notice => $chan, "Failed to post quote '$short...'");
 
             die $@ unless blessed($@) and $@->isa('Net::Twitter::Error');
