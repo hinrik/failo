@@ -157,7 +157,6 @@ sub S_botcmd_undent {
     my $chan  = ${ $_[1] };
 
     if (@{ $self->{queue} }) {
-        print "foo1\n";
         my $topic_info = $irc->channel_topic($chan);
         my $topic = $topic_info->{Value};
 
