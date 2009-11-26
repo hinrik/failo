@@ -82,32 +82,38 @@ sub _push_queue {
 
 sub _shift_queue {
     my $self = $_[OBJECT];
-    while (my $quote = shift @{ $self->{queue} }) {
-        my ($chan, $text) = @$quote;
-        $text = irc_to_utf8($text);
-        while (my ($old, $new) = each %nicks) {
-            $text =~ s/\b\Q$old\E_*\b/$new/gi;
+    my $irc = $self->{irc};
+    my ($chan, $quote) = @{ shift @{ $self->{queue} } };
+    my $pseudo = _pseudonimize($quote);
+
+    # post the quote as a status update
+    eval {
+        $self->{twit}->update($pseudo);
+    };
+    if ($@) {
+        if (!blessed($@) || !$@->isa('Net::Twitter::Error')) {
+            $irc->yield(notice => $chan, "Unknown Net::Twitter error: $@");
+            return;
         }
 
-        # save the quote locally
-        push @quotes, $text;
-        DumpFile('quotes.yml', \@quotes);
-
-        # post the quote as a status update
-        eval {
-            $self->{twit}->update($text);
-        };
-        if ($@) {
-            die $@ unless blessed($@) and $@->isa('Net::Twitter::Error');
-
-            my ($short) = $text =~ /(.{0,50})/;
-            $self->{irc}->yield(notice => $chan, "Failed to post quote '$short...': " . $@->error());
-
-            warn "HTTP Response Code: ", $@->code(), "\n",
-                "HTTP Message......: ", $@->message(), "\n",
-                "Twitter error.....: ", $@->error(), "\n";
+        my $topic_info = $irc->channel_topic($chan);
+        my $topic = $topic_info->{Value};
+        if ($topic =~ s/\Q$quote\E(?: \| )?//) {
+            $irc->yield(topic => $chan, $topic);
         }
+
+        my ($short) = $quote =~ /(.{0,50})/;
+        $irc->yield(notice => $chan, "Failed to post quote '$short...': " . $@->error());
+
+        warn "HTTP Response Code: ", $@->code(), "\n",
+            "HTTP Message......: ", $@->message(), "\n",
+            "Twitter error.....: ", $@->error(), "\n";
+        return;
     }
+
+    # save the quote locally
+    push @quotes, $quote;
+    DumpFile('quotes.yml', \@quotes);
 }
 
 sub _pop_queue {
@@ -121,31 +127,26 @@ sub S_botcmd_dent {
     my ($self, $irc) = splice @_, 0, 2;
     my $nick  = parse_user( ${ $_[0] } );
     my $chan  = ${ $_[1] };
-    my $quote = ${ $_[2] };
+    my $quote = irc_to_utf8(${ $_[2] });
 
-    if (length $quote > 140) {
-        $irc->yield(notice => $chan, "$nick: That quote is too long (>140 characters).");
+    my $pseudo = _pseudonimize($quote);
+
+    if (length($pseudo) > 140) {
+        my $surplus = length($pseudo) - 140;
+        $irc->yield(notice => $chan, "$nick: That quote is $surplus chars too long.");
         return PCI_EAT_NONE;
     }
 
-    if ($self->{last_quote}) {
-        my $dist = adist($self->{last_quote}, $quote);
-        if ($dist > -5 && $dist < 5) {
-            $irc->yield(notice => $chan, "$nick: I just added that quote.");
-            return PCI_EAT_NONE;
-        }
-    }
-
-    my $topic_info = $irc->channel_topic($chan);
-    my $topic = $topic_info->{Value};
-
-    if ($topic =~ /$quote/i) {
+    if ($self->_in_queue($quote)) {
         $irc->yield(notice => $chan, "$nick: I've already added that quote.");
         return PCI_EAT_NONE;
     }
 
-    $self->{last_quote} = $quote;
-    $irc->yield(topic => $chan, "$quote | $topic");
+    my $topic_info = $irc->channel_topic($chan);
+    my $topic = $topic_info->{Value};
+    my $new_topic = length($topic) ? "$quote | $topic" : $quote;
+
+    $irc->yield(topic => $chan, $new_topic);
     $poe_kernel->post($self->{session_id}, _push_queue => [$chan, $quote]);
     return PCI_EAT_NONE;
 }
@@ -156,12 +157,12 @@ sub S_botcmd_undent {
     my $chan  = ${ $_[1] };
 
     if (@{ $self->{queue} }) {
+        print "foo1\n";
         my $topic_info = $irc->channel_topic($chan);
         my $topic = $topic_info->{Value};
-        $topic =~ s/^\Q$self->{last_quote}\E \| //;
-        $irc->yield(topic => $chan, $topic);
 
-        delete $self->{last_quote};
+        $topic =~ s/^\Q$self->{queue}[-1][1]\E(?: \| )?//;
+        $irc->yield(topic => $chan, $topic);
         $poe_kernel->call($self->{session_id}, '_pop_queue');
     }
     else {
@@ -171,3 +172,22 @@ sub S_botcmd_undent {
     return PCI_EAT_NONE;
 }
 
+sub _pseudonimize {
+    my ($quote) = @_;
+    while (my ($old, $new) = each %nicks) {
+        $quote =~ s/\b\Q$old\E_*\b/$new/gi;
+    }
+    return $quote;
+}
+
+sub _in_queue {
+    my ($self, $quote) = @_;
+
+    for my $queued_info (@{ $self->{queue} }) {
+        my $queued = $queued_info->[1];
+        my $dist = adist($queued, $quote);
+        return 1 if $dist > -5 && $dist < 5;
+    }
+
+    return;
+}
