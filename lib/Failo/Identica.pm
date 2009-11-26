@@ -98,10 +98,11 @@ sub _shift_queue {
             $self->{twit}->update($text);
         };
         if ($@) {
-            my ($short) = $text =~ /(.{0,50})/;
-            $self->{irc}->yield(notice => $chan, "Failed to post quote '$short...'");
-
             die $@ unless blessed($@) and $@->isa('Net::Twitter::Error');
+
+            my ($short) = $text =~ /(.{0,50})/;
+            $self->{irc}->yield(notice => $chan, "Failed to post quote '$short...': " . $@->error());
+
             warn "HTTP Response Code: ", $@->code(), "\n",
                 "HTTP Message......: ", $@->message(), "\n",
                 "Twitter error.....: ", $@->error(), "\n";
