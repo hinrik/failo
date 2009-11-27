@@ -9,6 +9,8 @@ use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::BotCommand;
 use POE::Component::IRC::Plugin::Connector;
 use POE::Component::IRC::Plugin::MegaHAL;
+use POE::Component::IRC::Plugin::URI::Find;
+use Failo::Old;
 use Failo::Identica;
 use Failo::Translator;
 use Failo::Resolver;
@@ -34,12 +36,14 @@ for my $network (qw(freenode magnet)) {
     );
 
     $irc->plugin_add('Connector', POE::Component::IRC::Plugin::Connector->new());
+    $irc->plugin_add('UriFind', POE::Component::IRC::Plugin::URI::Find->new());
     $irc->plugin_add('BotCommand', POE::Component::IRC::Plugin::BotCommand->new(
         Addressed => 0,
         Prefix    => ',',
         Eat       => 1,
     ));
 
+    $irc->plugin_add('Old', Failo::Old->new());
     $irc->plugin_add('Identica', Failo::Identica->new());
     $irc->plugin_add('Translator', Failo::Translator->new());
     $irc->plugin_add('Resolver', Failo::Resolver->new());
