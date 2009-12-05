@@ -9,7 +9,7 @@ use POE::Component::IRC::Plugin qw(:ALL);
 use Net::Twitter;
 use Scalar::Util qw(blessed);
 use String::Approx qw(adist);
-use YAML::Any qw(LoadFile DumpFile);
+use YAML::XS qw(LoadFile DumpFile);
 
 our $VERSION = '0.01';
 my %nicks = %{ LoadFile('map_names.yml') };
