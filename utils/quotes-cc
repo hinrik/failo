@@ -20,12 +20,17 @@ E<AElig>var ArnfjE<ouml>rE<eth> Bjarmason <avar@cpan.org>
 
 die "Specify a YAML file as an argument" unless $ARGV[0] and -f $ARGV[0];
 
-my @quotes = map { s/"/\\"/g; $_ } @{ LoadFile( $ARGV[0] ) };
+my @quotes = @{ LoadFile( $ARGV[0] ) };
 my $size = @quotes;
 
 Template->new->process(\*DATA, {
     quotes => \@quotes,
-    size => $size
+    size => $size,
+    escape => sub {
+        my $_ = shift;
+        s/"/\\"/g;
+        qq["$_"];
+    },
 });
 
 __DATA__
@@ -37,7 +42,7 @@ __DATA__
 
 char* quotes[[% size %]] = {
 [% FOREACH quote IN quotes
-%]    "[% quote %]",
+%]    [% escape(quote) %],
 [% END
 %]};
 
