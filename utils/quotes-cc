@@ -9,7 +9,7 @@ quotes-cc - Compile failo's quote to a C program
 
 =head1 SYNOPSIS
 
-    perl -COEL utils/quotes-cc /home/hinrik/src/failo/quotes.yml > failo-wisdom.c && gcc -o /usr/local/bin/failo-wisdom failo-wisdom.c
+    perl -COEL ~avar/g/failo/utils/quotes-cc /home/hinrik/src/failo/quotes.yml | gcc -x c -o /usr/local/bin/failo-wisdom -
     failo-wisdom
 
 =head1 AUTHOR
