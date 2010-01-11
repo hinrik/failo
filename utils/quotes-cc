@@ -1,0 +1,62 @@
+#!/usr/bin/env perl
+use Modern::Perl;
+use YAML::XS qw(LoadFile);
+use Template;
+
+=head1 NAME
+
+quotes-cc - Compile failo's quote to a C program
+
+=head1 SYNOPSIS
+
+    perl -COEL utils/quotes-cc /home/hinrik/src/failo/quotes.yml > failo-wisdom.c && gcc -o /usr/local/bin/failo-wisdom failo-wisdom.c
+    failo-wisdom
+
+=head1 AUTHOR
+
+E<AElig>var ArnfjE<ouml>rE<eth> Bjarmason <avar@cpan.org>
+
+=cut
+
+die "Specify a YAML file as an argument" unless $ARGV[0] and -f $ARGV[0];
+
+my @quotes = map { s/"/\\"/g; $_ } @{ LoadFile( $ARGV[0] ) };
+my $size = @quotes;
+
+Template->new->process(\*DATA, {
+    quotes => \@quotes,
+    size => $size
+});
+
+__DATA__
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/time.h>
+
+char* quotes[[% size %]] = {
+[% FOREACH quote IN quotes
+%]    "[% quote %]",
+[% END
+%]};
+
+/* returns random integer between min and max, inclusive */
+int rand_range(int min, int max)
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    long int n = tv.tv_usec * getpid();
+    srand(n);
+
+    return (rand() % (max+1-min)+min);
+}
+
+int main(void)
+{
+    int quote = rand_range(0, [% size %]);
+
+    printf("%s\n", quotes[quote]);
+
+    return EXIT_SUCCESS;
+}
