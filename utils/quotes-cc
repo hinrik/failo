@@ -23,6 +23,7 @@ die "Specify a YAML file as an argument" unless $ARGV[0] and -f $ARGV[0];
 my @quotes = @{ LoadFile( $ARGV[0] ) };
 my $size = @quotes;
 
+binmode STDOUT, ":utf8";
 Template->new->process(\*DATA, {
     quotes => \@quotes,
     size => $size,
