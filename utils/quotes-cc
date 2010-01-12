@@ -48,21 +48,21 @@ char* quotes[[% size %]] = {
 %]};
 
 /* returns random integer between min and max, inclusive */
-int rand_range(int min, int max)
+const int rand_range(const int min, const int max)
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    long int n = tv.tv_usec * getpid();
+    const long int n = tv.tv_usec * getpid();
     srand(n);
 
-    return (rand() % (max+1-min)+min);
+    return (rand() % (max + 1 - min) + min);
 }
 
-int main(void)
+const int main(void)
 {
-    int quote = rand_range(0, [% size %]);
+    const int quote = rand_range(0, [% size %]);
 
-    printf("%s\n", quotes[quote]);
+    puts(quotes[quote]);
 
     return EXIT_SUCCESS;
 }
