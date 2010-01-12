@@ -41,7 +41,7 @@ __DATA__
 #include <unistd.h>
 #include <sys/time.h>
 
-char* quotes[[% size %]] = {
+const char* const quotes[[% size %]] = {
 [% FOREACH quote IN quotes
 %]    [% escape(quote) %],
 [% END
