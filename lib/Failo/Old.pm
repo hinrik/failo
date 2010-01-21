@@ -5,7 +5,7 @@ use warnings;
 use POE;
 use POE::Component::IRC::Common qw(parse_user);
 use POE::Component::IRC::Plugin qw(:ALL);
-use YAML::Any qw(DumpFile LoadFile);
+use YAML::XS qw(DumpFile LoadFile);
 
 our $VERSION = '0.01';
 
