@@ -174,7 +174,7 @@ sub S_botcmd_undent {
 sub _pseudonimize {
     my ($quote) = @_;
     while (my ($old, $new) = each %nicks) {
-        $quote =~ s/\b\Q$old\E(?:s|_+)?\b/$new/gi;
+        $quote =~ s/\b(?:fail)?\Q$old\E(?:s|_+)?\b/$new/gi;
     }
     return $quote;
 }
