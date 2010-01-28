@@ -4,11 +4,11 @@ use strict;
 use warnings;
 use lib 'lib';
 use POE;
-use POE::Component::AI::MegaHAL;
+use POE::Component::Hailo;
 use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::BotCommand;
 use POE::Component::IRC::Plugin::Connector;
-use POE::Component::IRC::Plugin::MegaHAL;
+use POE::Component::IRC::Plugin::Hailo;
 use POE::Component::IRC::Plugin::URI::Find;
 use Failo::Old;
 use Failo::Identica;
@@ -19,7 +19,7 @@ use Fcntl ':flock';
 open my $self, '<', $0 or die "Couldn't open self: $!";
 flock $self, LOCK_EX | LOCK_NB or die "This script is already running";
 
-my $megahal = POE::Component::AI::MegaHAL->spawn(alias => 'megahal');
+my $hailo = POE::Component::Hailo->spawn(alias => 'hailo');
 
 my $irc_pass = qx/cat bouncer_pass.txt/;
 chomp $irc_pass;
@@ -48,9 +48,9 @@ for my $network (qw(freenode)) {
     #$irc->plugin_add('Translator', Failo::Translator->new());
     $irc->plugin_add('Resolver', Failo::Resolver->new());
 
-    $irc->plugin_add('MegaHAL', POE::Component::IRC::Plugin::MegaHAL->new(
+    $irc->plugin_add('Hailo', POE::Component::IRC::Plugin::Hailo->new(
         ($network eq 'freenode' ? (Own_channel => '#failo') : ()),
-        MegaHAL        => $megahal,
+        Hailo        => $hailo,
         Abuse_interval => 0,
         English        => 1,
         Talkative      => 1,
@@ -64,7 +64,7 @@ for my $network (qw(freenode)) {
 POE::Session->create(
     inline_states => {
         _start => sub { $poe_kernel->sig(INT => '_int'); $_->yield('connect') for values %ircs },
-        _int   => sub { $_->yield('shutdown') for values %ircs; $poe_kernel->post(megahal => 'shutdown') },
+        _int   => sub { $_->yield('shutdown') for values %ircs; $poe_kernel->post(hailo => 'shutdown') },
     }
 );
 
