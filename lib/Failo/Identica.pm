@@ -190,3 +190,5 @@ sub _in_queue {
 
     return;
 }
+
+1;
