@@ -97,7 +97,7 @@ sub _shift_queue {
         }
 
         my $topic_info = $irc->channel_topic($chan);
-        my $topic = $topic_info->{Value};
+        my $topic = irc_to_utf8($topic_info->{Value});
         if ($topic =~ s/\Q$quote\E(?: \| )?//) {
             $irc->yield(topic => $chan, $topic);
         }
@@ -143,7 +143,7 @@ sub S_botcmd_dent {
     }
 
     my $topic_info = $irc->channel_topic($chan);
-    my $topic = $topic_info->{Value};
+    my $topic = irc_to_utf8($topic_info->{Value});
     my $new_topic = length($topic) ? "$quote | $topic" : $quote;
 
     $irc->yield(topic => $chan, $new_topic);
@@ -158,7 +158,7 @@ sub S_botcmd_undent {
 
     if (@{ $self->{queue} }) {
         my $topic_info = $irc->channel_topic($chan);
-        my $topic = $topic_info->{Value};
+        my $topic = irc_to_utf8($topic_info->{Value});
 
         $topic =~ s/^\Q$self->{queue}[-1][1]\E(?: \| )?//;
         $irc->yield(topic => $chan, $topic);
