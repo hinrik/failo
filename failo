@@ -24,6 +24,9 @@ my $hailo = POE::Component::Hailo->spawn(
     Hailo_args => {
         storage_class  => 'SQLite',
         brain_resource => 'failo.sqlite',
+        storage_args   => {
+	    cache_size => 102400, # 100MB page cache
+        }
     },
 );
 
