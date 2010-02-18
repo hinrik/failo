@@ -22,11 +22,8 @@ flock $self, LOCK_EX | LOCK_NB or die "This script is already running";
 my $hailo = POE::Component::Hailo->spawn(
     alias      => 'hailo',
     Hailo_args => {
-        storage_class  => 'SQLite',
-        brain_resource => 'failo.sqlite',
-        storage_args   => {
-	    cache_size => 102400, # 100MB page cache
-        }
+        storage_class   => 'SQLite',
+        brain_resource  => 'failo.sqlite',
     },
 );
 
