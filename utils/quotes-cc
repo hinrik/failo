@@ -37,6 +37,7 @@ Template->new->process(\*DATA, {
 __DATA__
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/time.h>
@@ -58,11 +59,22 @@ const int rand_range(const int min, const int max)
     return (rand() % (max + 1 - min) + min);
 }
 
-const int main(void)
+const int main(const int argc, const char **argv)
 {
-    const int quote = rand_range(0, [% size %]);
+    int i;
+    const char* const all = "--all";
+    const size_t all_length = strlen(all);
 
-    puts(quotes[quote]);
+    if (argc == 2 &&
+        strlen(argv[1]) == all_length &&
+        !strncmp(argv[1], all, all_length)) {
+        for (i = 0; i < [% size %]; i++) {
+            puts(quotes[i]);
+        }
+    } else {
+        const int quote = rand_range(0, [% size %]);
+        puts(quotes[quote]);
+    }
 
     return EXIT_SUCCESS;
 }
