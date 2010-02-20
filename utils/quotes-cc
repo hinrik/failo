@@ -5,7 +5,7 @@ use Template;
 
 =head1 NAME
 
-quotes-cc - Compile failo's YAML quotes file to a fast C program that prints one of them randomly to STDOUT when invoked 
+quotes-cc - Compile failo's YAML quotes file to a fast C program that prints one of them randomly to STDOUT when invoked
 
 =head1 SYNOPSIS
 
