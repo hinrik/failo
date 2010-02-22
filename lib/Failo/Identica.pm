@@ -96,6 +96,7 @@ sub _shift_queue {
             return;
         }
 
+        # remove quote from topic
         my $topic_info = $irc->channel_topic($chan);
         my $topic = irc_to_utf8($topic_info->{Value});
         if ($topic =~ s/\Q$quote\E(?: \| )?//) {
@@ -129,6 +130,7 @@ sub S_botcmd_dent {
     my $chan  = ${ $_[1] };
     my $quote = irc_to_utf8(${ $_[2] });
 
+    return if $quote =~ /^\s*$/;
     my $pseudo = _pseudonimize($quote);
 
     if (length($pseudo) > 140) {
