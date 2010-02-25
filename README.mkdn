@@ -1,0 +1,12 @@
+# failo
+
+## Train
+
+    pv ~failo/failo/avar.log  | irchailo-seed -f irssi   -b failo -n failo -r         '^,\w' -r '\w+://\w' >  avar.trn
+    pv ~failo/failo/failo.log | irchailo-seed -f pocoirc -b failo -n failo -n preflex '^,\w' -r '\w+://\w' > failo.trn
+
+## Import
+
+With PostgreSQL:
+
+    time hailo --brain hinrk-fails --train avar.trn --storage DBD::Pg --storage-args dbname=failo
