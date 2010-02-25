@@ -1,8 +1,8 @@
 #!/usr/bin/env perl
-
+BEGIN {  chdir '/home/failo/failo' or die $! };
 use strict;
 use warnings;
-use lib 'lib';
+use lib '/home/failo/failo/lib';
 use POE;
 use POE::Component::Hailo;
 use POE::Component::IRC::State;
@@ -16,7 +16,8 @@ use Failo::Identica;
 use Failo::Resolver;
 use Fcntl ':flock';
 
-open my $self, '<', $0 or die "Couldn't open self: $!";
+my $name = '/home/failo/failo/failo';
+open my $self, '<', $name or die "Couldn't open self: $!";
 flock $self, LOCK_EX | LOCK_NB or die "This script is already running";
 
 POE::Session->create(
@@ -33,8 +34,12 @@ sub _start {
     my $hailo = POE::Component::Hailo->spawn(
         alias      => 'hailo',
         Hailo_args => {
-            storage_class   => 'SQLite',
-            brain_resource  => 'failo.sqlite',
+            #storage_class   => 'SQLite',
+            #brain_resource  => 'failo.sqlite',
+            storage_class   => 'Pg',
+            storage_args => {
+                dbname   => 'failo',
+            },
         },
     );
 
