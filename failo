@@ -9,11 +9,11 @@ use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::BotCommand;
 use POE::Component::IRC::Plugin::Connector;
 use POE::Component::IRC::Plugin::Hailo;
-use POE::Component::IRC::Plugin::URI::Find;
-use Failo::Old;
+#use POE::Component::IRC::Plugin::URI::Find;
+#use Failo::Old;
 use Failo::Identica;
 #use Failo::Translator;
-use Failo::Resolver;
+#use Failo::Resolver;
 use Fcntl ':flock';
 
 my $name = '/home/failo/failo/failo';
@@ -61,17 +61,17 @@ sub _start {
         );
 
         $irc->plugin_add('Connector', POE::Component::IRC::Plugin::Connector->new());
-        $irc->plugin_add('UriFind', POE::Component::IRC::Plugin::URI::Find->new());
+        #$irc->plugin_add('UriFind', POE::Component::IRC::Plugin::URI::Find->new());
         $irc->plugin_add('BotCommand', POE::Component::IRC::Plugin::BotCommand->new(
             Addressed => 0,
             Prefix    => ',',
             Eat       => 1,
         ));
 
-        $irc->plugin_add('Old', Failo::Old->new());
+        #$irc->plugin_add('Old', Failo::Old->new());
         $irc->plugin_add('Identica', Failo::Identica->new());
         #$irc->plugin_add('Translator', Failo::Translator->new());
-        $irc->plugin_add('Resolver', Failo::Resolver->new());
+        #$irc->plugin_add('Resolver', Failo::Resolver->new());
 
         $irc->plugin_add('Hailo', POE::Component::IRC::Plugin::Hailo->new(
             ($network eq 'freenode' ? (Own_channel => '#failo') : ()),
