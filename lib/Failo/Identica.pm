@@ -6,7 +6,7 @@ use POE;
 use POE::Component::IRC '6.06';
 use POE::Component::IRC::Common qw(parse_user irc_to_utf8);
 use POE::Component::IRC::Plugin qw(:ALL);
-use Net::Twitter;
+use Net::Twitter::Lite;
 use Scalar::Util qw(blessed);
 use String::Approx qw(adist);
 use YAML::XS qw(LoadFile DumpFile);
@@ -45,7 +45,7 @@ sub PCI_register {
     );
 
     $self->{irc} = $irc;
-    $self->{twit} = Net::Twitter->new(
+    $self->{twit} = Net::Twitter::Lite->new(
         username   => 'failo',
         password   => $identica_pass,
         source     => 'failo',
@@ -91,8 +91,8 @@ sub _shift_queue {
         $self->{twit}->update($pseudo);
     };
     if ($@) {
-        if (!blessed($@) || !$@->isa('Net::Twitter::Error')) {
-            $irc->yield(notice => $chan, "Unknown Net::Twitter error: $@");
+        if (!blessed($@) || !$@->isa('Net::Twitter::Error::Lite')) {
+            $irc->yield(notice => $chan, "Unknown Net::Twitter::Lite error: $@");
             return;
         }
 
