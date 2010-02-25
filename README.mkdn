@@ -16,4 +16,17 @@ With PostgreSQL:
 
     dropdb failo
     createdb -E UTF8 -O failo failo
+
+    # Train via sqlite
+    sqlite3 failo.sqlite .dump | pv > /tmp/failo.sql
+    pv /tmp/failo.sql | grep -e ^BEGIN -e ^INSERT -e ^COMMIT | perl -pe "s[,\K'][E']" | perl -pe 's[\\][\\\\]g' > /tmp/failo.pgsql
+    pv /tmp/failo.sql | grep -e ^INSERT | perl -pe "s[,\K'][E']" | perl -pe 's[\\][\\\\]g' > /tmp/failo.pgsql
+
+    # Just create an empty db, hailo won't learn from this:
+    hailo --brain hinrk-fails --learn "token" --storage DBD::Pg --storage-args dbname=failo
+    echo 'delete from token;' | psql
+
+    # Import it
+    pv /tmp/failo.pgsql | psql failo 2>&1 | tee /tmp/pgsql.err
+
     time hailo --brain hinrk-fails --train all.trn --storage DBD::Pg --storage-args dbname=failo
