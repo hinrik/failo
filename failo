@@ -34,12 +34,12 @@ sub _start {
     my $hailo = POE::Component::Hailo->spawn(
         alias      => 'hailo',
         Hailo_args => {
-            #storage_class   => 'SQLite',
-            #brain_resource  => 'failo.sqlite',
-            storage_class   => 'Pg',
-            storage_args => {
-                dbname   => 'failo',
-            },
+            storage_class   => 'SQLite',
+            brain_resource  => '/home/failo/failo/failo.sqlite',
+            #storage_class   => 'Pg',
+            #storage_args => {
+            #    dbname   => 'failo',
+            #},
         },
     );
 
