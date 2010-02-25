@@ -36,10 +36,13 @@ sub _start {
         Hailo_args => {
             storage_class   => 'SQLite',
             brain_resource  => '/home/failo/failo/failo.sqlite',
-            #storage_class   => 'Pg',
-            #storage_args => {
-            #    dbname   => 'failo',
-            #},
+            storage_args    => {
+                in_memory => 0,
+                pragmas   => {
+                    synchronous  => 'OFF',
+                    journal_mode => 'OFF',
+                },
+            },
         },
     );
 
