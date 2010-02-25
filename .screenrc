@@ -1,0 +1,20 @@
+nethack on
+
+# Turn off the startup banner
+startup_message off
+
+# Emacs keybindings on C-a [
+markkeys "h=^B:l=^F:$=^E"
+
+caption always "%{= kw}%-w%{= gW}%n %t%{-}%+w %-= %{= r}%H%{-} %{= g}%l%{-} %D %Y-%m-%d %c:%s"
+
+# let root connect to this session, so we can do "sudo screen -x leech/"
+# to attach without having to log in as the leech user first
+multiuser on
+acladd root
+
+sessionname failo
+screen -t bondage 0 bondage -d -w failo
+screen -t hailo   1 perl failo/failo
+select 0
+detach
