@@ -20,7 +20,7 @@ With PostgreSQL:
     # Train via sqlite
     sqlite3 failo.sqlite .dump | pv > /tmp/failo.sql
     pv /tmp/failo.sql | grep -e ^BEGIN -e ^INSERT -e ^COMMIT | perl -pe "s[,\K'][E']" | perl -pe 's[\\][\\\\]g' > /tmp/failo.pgsql
-    pv /tmp/failo.sql | grep -e ^INSERT | grep -v '^INSERT INTO "sqlite_sequence"' | perl -pe "s[,\K'][E']" | perl -pe 's[\\][\\\\]g' > /tmp/failo.pgsql
+    pv /tmp/failo.sql | grep -e ^BEGIN -e ^INSERT -e ^COMMIT | grep -v '^INSERT INTO "sqlite_sequence"' | perl -pe "s[,\K'][E']" | perl -pe 's[\\][\\\\]g' > /tmp/failo.pgsql
 
     # Just create an empty db, hailo won't learn from this:
     hailo --brain hinrk-fails --learn "token" --storage DBD::Pg --storage-args dbname=failo
