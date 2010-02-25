@@ -5,3 +5,6 @@ logs
 quotes.yml
 old_uri.yml
 config.yml
+*.log
+*.trn
+*.sqlite
