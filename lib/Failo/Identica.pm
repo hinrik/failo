@@ -12,16 +12,17 @@ use String::Approx qw(adist);
 use YAML::XS qw(LoadFile DumpFile);
 
 our $VERSION = '0.01';
-my %nicks = %{ LoadFile('map_names.yml') };
-
-my $identica_pass = qx/cat identica_pass.txt/;
-chomp $identica_pass;
-
-my @quotes = @{ LoadFile('quotes.yml') || [] };
 
 sub new {
     my ($package, %args) = @_;
-    return bless \%args, $package;
+    my $self = bless \%args, $package;
+
+    $self->{nicks} = LoadFile('map_names.yml');
+    $self->{quotes} = LoadFile('quotes.yml') || [];
+    $self->{identica_pass} = qx/cat identica_pass.txt/;
+    chomp $self->{identica_pass};
+
+    return $self;
 }
 
 sub PCI_register {
@@ -47,7 +48,7 @@ sub PCI_register {
     $self->{irc} = $irc;
     $self->{twit} = Net::Twitter::Lite->new(
         username   => 'failo',
-        password   => $identica_pass,
+        password   => $self->{identica_pass},
         source     => 'failo',
         traits     => ['API::REST'],
         identica   => 1,
@@ -84,7 +85,7 @@ sub _shift_queue {
     my $self = $_[OBJECT];
     my $irc = $self->{irc};
     my ($chan, $quote) = @{ shift @{ $self->{queue} } };
-    my $pseudo = _pseudonimize($quote);
+    my $pseudo = $self->_pseudonimize($quote);
 
     # post the quote as a status update
     eval {
@@ -113,8 +114,8 @@ sub _shift_queue {
     }
 
     # save the quote locally
-    push @quotes, $quote;
-    DumpFile('quotes.yml', \@quotes);
+    push @{ $self->{quotes} }, $quote;
+    DumpFile('quotes.yml', $self->{quotes});
 }
 
 sub _pop_queue {
@@ -131,7 +132,7 @@ sub S_botcmd_dent {
     my $quote = irc_to_utf8(${ $_[2] });
 
     return if $quote =~ /^\s*$/;
-    my $pseudo = _pseudonimize($quote);
+    my $pseudo = $self->_pseudonimize($quote);
 
     if (length($pseudo) > 140) {
         my $surplus = length($pseudo) - 140;
@@ -174,8 +175,8 @@ sub S_botcmd_undent {
 }
 
 sub _pseudonimize {
-    my ($quote) = @_;
-    while (my ($old, $new) = each %nicks) {
+    my ($self, $quote) = @_;
+    while (my ($old, $new) = each %{ $self->{nicks} }) {
         $quote =~ s/\b(?:fail)?\Q$old\E(?:s|_+)?\b/$new/gi;
     }
     return $quote;
