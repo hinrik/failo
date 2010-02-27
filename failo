@@ -97,6 +97,7 @@ sub _start {
             Abuse_interval => 0,
             English        => 1,
             Talkative      => 1,
+            Method         => 'noticelo',
             Ignore_regexes => [
                 qr{\w+://\w},   # ignore lines containing urls
             ],
