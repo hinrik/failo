@@ -11,7 +11,6 @@ use POE::Component::IRC::Plugin::Connector;
 use POE::Component::IRC::Plugin::Hailo;
 use POE::Component::IRC::Plugin::ImageMirror;
 use POE::Component::IRC::Plugin::RTorrentStatus;
-#use POE::Component::IRC::Plugin::URI::Find;
 #use Failo::Old;
 use Failo::Identica;
 use Failo::URITitle;
@@ -64,7 +63,6 @@ sub _start {
         );
 
         $irc->plugin_add('Connector', POE::Component::IRC::Plugin::Connector->new());
-        #$irc->plugin_add('UriFind', POE::Component::IRC::Plugin::URI::Find->new());
         $irc->plugin_add('BotCommand', POE::Component::IRC::Plugin::BotCommand->new(
             Addressed => 0,
             Prefix    => ',',
