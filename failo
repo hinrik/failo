@@ -37,15 +37,8 @@ sub _start {
     my $hailo = POE::Component::Hailo->spawn(
         alias      => 'hailo',
         Hailo_args => {
-            storage_class   => 'SQLite',
-            brain_resource  => '/home/failo/failo/failo.sqlite',
-            storage_args    => {
-                in_memory => 0,
-                pragmas   => {
-                    synchronous  => 'OFF',
-                    journal_mode => 'OFF',
-                },
-            },
+            storage_class  => 'SQLite',
+            brain_resource => '/home/failo/failo/failo.sqlite',
         },
     );
 
