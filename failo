@@ -14,6 +14,7 @@ use POE::Component::IRC::Plugin::RTorrentStatus;
 #use POE::Component::IRC::Plugin::URI::Find;
 #use Failo::Old;
 use Failo::Identica;
+use Failo::URITitle;
 #use Failo::Translator;
 #use Failo::Resolver;
 use Fcntl ':flock';
@@ -84,6 +85,14 @@ sub _start {
             URI_subst => [
                 qr{(?<=^)https(?=://ringulreid\.org/)}     => 'http',
                 qr{(?<=^)https(?=://(?:www\.)?7chan\.org)} => 'http',
+            ],
+        ));
+
+        $irc->plugin_add(URITitle => Failo::URITitle->new(
+            Channels => ['#avar'],
+            URI_nomatch => [
+                qr{(?:chan\.(?:ru|net|org)|anonib\.com|2ch\.ru|ringulreid\.org)/\w+/src/.*(?i:jpe?g|gif|png)$},
+                qr{anonib\.com.*(?i:jpe?g|gif|png)$},
             ],
         ));
 
