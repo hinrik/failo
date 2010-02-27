@@ -11,6 +11,7 @@ use POE::Component::IRC::Plugin::Connector;
 use POE::Component::IRC::Plugin::Hailo;
 use POE::Component::IRC::Plugin::ImageMirror;
 use POE::Component::IRC::Plugin::RTorrentStatus;
+use POE::Component::IRC::Plugin::Google::Calculator;
 #use Failo::Old;
 use Failo::Identica;
 use Failo::URITitle;
@@ -63,11 +64,22 @@ sub _start {
         );
 
         $irc->plugin_add('Connector', POE::Component::IRC::Plugin::Connector->new());
-        $irc->plugin_add('BotCommand', POE::Component::IRC::Plugin::BotCommand->new(
+        $irc->plugin_add('Calc', POE::Component::IRC::Plugin::Google::Calculator->new(
+            trigger   => qr/^,calc\s+(?=\S)/i,
+            addressed => 0,
+            # Zoffix doesn't provide an easy way to make the bot reply with
+            # a NOTICE, so we must do it manually
+            #auto           => 0,
+            #response_event => 'irc_calc',
+        ));
+
+        my $botcmd = POE::Component::IRC::Plugin::BotCommand->new(
             Addressed => 0,
             Prefix    => ',',
             Eat       => 1,
-        ));
+        );
+        $botcmd->add(calc => 'Usage: calc <expression>');
+        $irc->plugin_add('BotCommand', $botcmd);
 
         $irc->plugin_add(Torrent => POE::Component::IRC::Plugin::RTorrentStatus->new(
             Torrent_log => '/tmp/torrentlog',
@@ -123,3 +135,12 @@ sub _int {
     $kernel->post(hailo => 'shutdown');
     $kernel->sig_handled();
 }
+
+#sub irc_calc {
+#    my ($sender, $response) = @_[SENDER, ARG0];
+#    my $irc = $sender->get_heap();
+#
+#    my $target = $response->{channel};
+#    $target = (split /!/, $response->{who})[0] if $response->{type} eq 'privmsg';
+#    $irc->yield(notice => $target, $response->{result});
+#}
