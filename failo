@@ -12,9 +12,9 @@ use POE::Component::IRC::Plugin::Hailo;
 use POE::Component::IRC::Plugin::ImageMirror;
 use POE::Component::IRC::Plugin::RTorrentStatus;
 use POE::Component::IRC::Plugin::Google::Calculator;
-#use Failo::Old;
 use Failo::Identica;
 use Failo::URITitle;
+#use Failo::Old;
 #use Failo::Translator;
 #use Failo::Resolver;
 use Fcntl ':flock';
@@ -106,11 +106,7 @@ sub _start {
             ],
         ));
 
-        #$irc->plugin_add('Old', Failo::Old->new());
         $irc->plugin_add('Identica', Failo::Identica->new());
-        #$irc->plugin_add('Translator', Failo::Translator->new());
-        #$irc->plugin_add('Resolver', Failo::Resolver->new());
-
         $irc->plugin_add('Hailo', POE::Component::IRC::Plugin::Hailo->new(
             ($network eq 'freenode' ? (Own_channel => '#failo') : ()),
             Hailo        => $hailo,
@@ -122,6 +118,11 @@ sub _start {
                 qr{\w+://\w},   # ignore lines containing urls
             ],
         ));
+
+        #$irc->plugin_add('Old', Failo::Old->new());
+        #$irc->plugin_add('Translator', Failo::Translator->new());
+        #$irc->plugin_add('Resolver', Failo::Resolver->new());
+
         $heap->{ircs}{$network} = $irc;
     }
 
