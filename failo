@@ -9,6 +9,8 @@ use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::BotCommand;
 use POE::Component::IRC::Plugin::Connector;
 use POE::Component::IRC::Plugin::Hailo;
+use POE::Component::IRC::Plugin::ImageMirror;
+use POE::Component::IRC::Plugin::RTorrentStatus;
 #use POE::Component::IRC::Plugin::URI::Find;
 #use Failo::Old;
 use Failo::Identica;
@@ -66,6 +68,22 @@ sub _start {
             Addressed => 0,
             Prefix    => ',',
             Eat       => 1,
+        ));
+
+        $irc->plugin_add(Torrent => POE::Component::IRC::Plugin::RTorrentStatus->new(
+            Torrent_log => '/tmp/torrentlog',
+            Channels    => ['#avar'],
+        ));
+
+        $irc->plugin_add(ImageMirror => POE::Component::IRC::Plugin::ImageMirror->new(
+            URI_match => [
+                qr{(?:chan\.(?:ru|net|org)|anonib\.com|2ch\.ru|ringulreid\.org)/\w+/src/.*(?i:jpe?g|gif|png)$},
+                qr{anonib\.com.*(?i:jpe?g|gif|png)$},
+            ],
+            URI_subst => [
+                qr{(?<=^)https(?=://ringulreid\.org/)}     => 'http',
+                qr{(?<=^)https(?=://(?:www\.)?7chan\.org)} => 'http',
+            ],
         ));
 
         #$irc->plugin_add('Old', Failo::Old->new());
