@@ -82,8 +82,7 @@ sub _start {
         $irc->plugin_add(URITitle => Failo::URITitle->new(
             Channels => ['#avar'],
             URI_nomatch => [
-                qr{(?:chan\.(?:ru|net|org)|anonib\.com|2ch\.ru|ringulreid\.org)/\w+/src/.*(?i:jpe?g|gif|png)$},
-                qr{anonib\.com.*(?i:jpe?g|gif|png)$},
+                qr{(?i:jpe?g|gif|png)$},
             ],
         ));
 
