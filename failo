@@ -72,7 +72,7 @@ sub _start {
         $irc->plugin_add(ImageMirror => POE::Component::IRC::Plugin::ImageMirror->new(
             Channels   => ['#avar'],
             Eat        => 1,
-            Imgur_user => $imgur_user
+            Imgur_user => $imgur_user,
             Imgur_pass => $imgur_pass,
             URI_match => [
                 qr/(?i:jpe?g|gif|png)$/,
