@@ -104,7 +104,7 @@ sub _http_handler {
     }
     
     # repository info
-    my $repo = "$info->{owner}{name}/$info->{repository}{name}";
+    my $repo = "$info->{repository}{owner}{name}/$info->{repository}{name}";
     my ($branch) = $info->{ref} =~ m{/([^/]+)$};
 
     # announce the commits
