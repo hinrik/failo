@@ -12,6 +12,7 @@ use POE::Component::IRC::Plugin::Hailo;
 use POE::Component::IRC::Plugin::ImageMirror;
 use POE::Component::IRC::Plugin::RTorrentStatus;
 use Failo::Identica;
+use Failo::Github;
 use Failo::URITitle;
 #use Failo::Old;
 #use Failo::Translator;
@@ -87,6 +88,10 @@ sub _start {
 
         $irc->plugin_add(URITitle => Failo::URITitle->new(
             Channels => ['#avar'],
+        ));
+
+        $irc->plugin_add(Github => Failo::Github->new(
+            bindport => '66699',
         ));
 
         $irc->plugin_add('Identica', Failo::Identica->new());
