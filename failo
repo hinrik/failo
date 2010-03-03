@@ -14,6 +14,7 @@ use POE::Component::IRC::Plugin::RTorrentStatus;
 use Failo::Identica;
 use Failo::Github;
 use Failo::URITitle;
+use Failo::ChanMirror;
 #use Failo::Old;
 #use Failo::Translator;
 #use Failo::Resolver;
@@ -92,6 +93,12 @@ sub _start {
 
         $irc->plugin_add(Github => Failo::Github->new(
             bindport => '66699',
+        ));
+
+        $irc->plugin_add(ChanMirror => Failo::ChanMirror->new(
+            Mirror_dir => '/home/failo/www/chanmirror',
+            Mirror_url => 'http://chanmirror.nix.is/',
+            State_file => 'chanmirror.yml',
         ));
 
         $irc->plugin_add('Identica', Failo::Identica->new());
