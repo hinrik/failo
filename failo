@@ -57,6 +57,7 @@ sub _start {
             port         => 50444,
             debug        => 1,
             plugin_debug => 1,
+            Flood        => 1,
         );
 
         $irc->plugin_add('Connector', POE::Component::IRC::Plugin::Connector->new());
