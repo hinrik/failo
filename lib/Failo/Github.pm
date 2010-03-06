@@ -108,7 +108,7 @@ sub _http_handler {
     my ($branch) = $info->{ref} =~ m{/([^/]+)$};
 
     # announce the commits
-    for my $commit (reverse @{ $info->{commits} || [] }) {
+    for my $commit (@{ $info->{commits} || [] }) {
         my $sha1 = 'SHA1-' . substr $commit->{id}, 0, 7;
 
         # IRC doesn't allow empty lines, but we want to preserve them
