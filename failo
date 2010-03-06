@@ -19,10 +19,14 @@ use Failo::ChanMirror;
 #use Failo::Translator;
 #use Failo::Resolver;
 use Fcntl ':flock';
+use Sys::Prctl 'prctl_name';
 
 my $name = '/home/failo/failo/failo';
 open my $self, '<', $name or die "Couldn't open self: $!";
 flock $self, LOCK_EX | LOCK_NB or die "This script is already running";
+
+$0 = 'failo';
+prctl_name('failo');
 
 POE::Session->create(
     package_states => [
