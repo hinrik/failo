@@ -88,7 +88,7 @@ sub _http_handler {
     # get the channel name
     my $uri = $request->uri;
     my $channel = ($uri->path_segments)[-1];
-    unless ($channel) {
+    if (!$channel) {
         $done->();
         return;
     }
@@ -102,27 +102,25 @@ sub _http_handler {
         $done->();
         return;
     }
-    
-    # repository info
+
+    # header
     my $repo = "$info->{repository}{owner}{name}/$info->{repository}{name}";
     my ($branch) = $info->{ref} =~ m{/([^/]+)$};
+    my $before = substr $info->{before}, 0, 7;
+    my $after = substr $info->{after}, 0, 7;
+    my $url = "$info->{repository}{url}/compare/$before...$after";
+    my $header = BOLD.$repo.NORMAL.' ('.ORANGE.$branch.NORMAL.") $url";
+    $irc->yield(privmsg => $channel, $header);
 
-    # announce the commits
-    for my $commit (@{ $info->{commits} || [] }) {
-        my $sha1 = 'SHA1-' . substr $commit->{id}, 0, 7;
-
-        # IRC doesn't allow empty lines, but we want to preserve them
-        $commit->{message} =~ s{\n\n}{\n \n}gm;
-
-        my $header = BOLD."$repo: ".NORMAL
-                     .DARK_GREEN."$commit->{author}{name} "
-                     .ORANGE."$branch ".NORMAL
-                     .BOLD.$sha1.NORMAL;
-        $irc->yield(privmsg =>, $channel, $header);
-        $irc->yield(privmsg =>, $channel, $commit->{message});
-        $irc->yield(privmsg =>, $channel, $commit->{url});
+    # commit messages
+    for my $commit (@{ $info->{commits} }) {
+        my $id = substr $commit->{id}, 0, 7;
+        my ($msg) = $commit->{message} =~ /^([^\n]*)/m;
+        my $author = $commit->{author}{name};
+        my $line = ORANGE."$id ".DARK_GREEN.$author.NORMAL.": $msg";
+        $irc->yield(privmsg => $channel, $line);
     }
-    
+
     # Dispatch something back to the requester.
     $done->();
     return;
