@@ -10,6 +10,7 @@ use POE::Component::Server::SimpleHTTP;
 
 sub new {
     my ($package, %args) = @_;
+    $args{Method} = 'notice' if !defined $args{Method};
     return bless \%args, $package;
 }
 
@@ -110,7 +111,7 @@ sub _http_handler {
     my $after = substr $info->{after}, 0, 7;
     my $url = "$info->{repository}{url}/compare/$before...$after";
     my $header = BOLD.$repo.NORMAL.' ('.ORANGE.$branch.NORMAL.") $url";
-    $irc->yield(privmsg => $channel, $header);
+    $irc->yield($self->{Method}, $channel, $header);
 
     # commit messages
     for my $commit (@{ $info->{commits} }) {
@@ -118,7 +119,7 @@ sub _http_handler {
         my ($msg) = $commit->{message} =~ /^([^\n]*)/m;
         my $author = $commit->{author}{name};
         my $line = ORANGE."$id ".DARK_GREEN.$author.NORMAL.": $msg";
-        $irc->yield(privmsg => $channel, $line);
+        $irc->yield($self->{Method}, $channel, $line);
     }
 
     # Dispatch something back to the requester.
