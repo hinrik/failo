@@ -109,7 +109,7 @@ sub _http_handler {
     my ($branch) = $info->{ref} =~ m{/([^/]+)$};
     my $before = substr $info->{before}, 0, 7;
     my $after = substr $info->{after}, 0, 7;
-    my $url = $before eq $after
+    my $url = @{ $info->{commits} } == 1
         ? "$info->{repository}{url}/commit/$after"
         : "$info->{repository}{url}/compare/$before...$after";
     my $header = BOLD.$repo.NORMAL.' ('.ORANGE.$branch.NORMAL.") $url";
