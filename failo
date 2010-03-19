@@ -8,7 +8,8 @@ use POE::Component::Hailo;
 use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::BotCommand;
 use POE::Component::IRC::Plugin::Connector;
-use POE::Component::IRC::Plugin::Hailo;
+use POE::Component::IRC::Plugin::Proxy;
+#use POE::Component::IRC::Plugin::Hailo;
 use POE::Component::IRC::Plugin::ImageMirror;
 use POE::Component::IRC::Plugin::RTorrentStatus;
 use Failo::Identica;
@@ -51,6 +52,7 @@ sub _start {
     chomp $irc_pass;
 
     my ($imgur_user, $imgur_pass) = split /\n/, qx/cat imgur_info.txt/;
+    my ($proxy_pass) = split /\n/, qx/cat proxy_pass.txt/;
 
     my %ircs;
     for my $network (qw(freenode)) {
@@ -106,17 +108,22 @@ sub _start {
         ));
 
         $irc->plugin_add('Identica', Failo::Identica->new());
-        $irc->plugin_add('Hailo', POE::Component::IRC::Plugin::Hailo->new(
-            ($network eq 'freenode' ? (Own_channel => '#failo') : ()),
-            Hailo        => $hailo,
-            Abuse_interval => 0,
-            English        => 1,
-            Talkative      => 1,
-            Method         => 'noticelo',
-            Ignore_regexes => [
-                qr{\w+://\w},   # ignore lines containing urls
-            ],
+
+        $irc->plugin_add('Proxy', POE::Component::IRC::Plugin::Proxy->new(
+            password    => $proxy_pass,
+            bindaddress => 'v.nix.is',
+            bindport    => 60666,
         ));
+        #$irc->plugin_add('Hailo', POE::Component::IRC::Plugin::Hailo->new(
+        #    ($network eq 'freenode' ? (Own_channel => '#failo') : ()),
+        #    Hailo        => $hailo,
+        #    Abuse_interval => 0,
+        #    Talkative      => 1,
+        #    Method         => 'noticelo',
+        #    Ignore_regexes => [
+        #        qr{\w+://\w},   # ignore lines containing urls
+        #    ],
+        #));
 
         #$irc->plugin_add('Old', Failo::Old->new());
         #$irc->plugin_add('Translator', Failo::Translator->new());
