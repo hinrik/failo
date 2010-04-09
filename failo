@@ -78,6 +78,8 @@ sub _start {
         ));
 
         $irc->plugin_add(ImageMirror => POE::Component::IRC::Plugin::ImageMirror->new(
+            debug      => 1,
+            URI_title  => 0,
             Channels   => ['#avar'],
             Eat        => 1,
             Imgur_user => $imgur_user,
