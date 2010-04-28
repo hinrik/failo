@@ -73,7 +73,7 @@ sub _start {
         ));
 
         $irc->plugin_add(Torrent => POE::Component::IRC::Plugin::RTorrentStatus->new(
-            Torrent_log => '/tmp/torrentlog',
+            Torrent_log => '/home/leech/torrent/log/torrent.log',
             Channels    => ['#avar'],
         ));
 
