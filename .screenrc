@@ -15,6 +15,6 @@ acladd root
 
 sessionname failo
 screen -t bondage 0 bondage -d -w failo
-screen -t hailo   1 perl failo/failo
+screen -t failo   1 perl failo/failo
 select 0
 detach
