@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use Carp 'croak';
 use File::Spec::Functions 'catfile';
+use List::Util 'first';
 use POE;
 use POE::Wheel::Run;
 use POE::Component::IRC::Plugin qw(:ALL);
@@ -99,11 +100,27 @@ sub _sig_DIE {
     return;
 }
 
+sub _ignoring_channel {
+    my ($self, $chan) = @_; 
+
+    if ($self->{Channels}) {
+        unless ($self->{Own_channel} && $self->_is_own_channel($chan)) {
+            return if !first {
+                $chan = irc_to_utf8($chan) if is_utf8($_);
+                $_ == $chan
+            } @{ $self->{Channels} };
+        }   
+    }   
+    return;
+}
+
 sub S_botcmd_chanmirror {
     my ($self, $irc) = splice @_, 0, 2;
     my $who   = (split /!/, ${ $_[0] })[0];
     my $where = ${ $_[1] };
     my $url   = ${ $_[2] };
+
+    return PCI_EAT_NONE if $self->_ignoring_channel($where);
 
     if (!defined $url || $url !~ m{^http://\S+chan\.org/}) {
         $irc->yield($self->{Method}, $where, "$who: I can't mirror that.");

@@ -107,9 +107,12 @@ sub _start {
             Mirror_dir => '/home/failo/www/chanmirror',
             Mirror_url => 'http://chanmirror.nix.is/',
             State_file => 'chanmirror.yml',
+            Channels   => ['#avar'],
         ));
 
-        $irc->plugin_add('Identica', Failo::Identica->new());
+        $irc->plugin_add('Identica', Failo::Identica->new(
+            Channels   => ['#avar', '#failo'],
+        ));
 
         $irc->plugin_add('Proxy', POE::Component::IRC::Plugin::Proxy->new(
             password    => $proxy_pass,

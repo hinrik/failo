@@ -2,6 +2,7 @@ package Failo::Identica;
 
 use strict;
 use warnings;
+use List::Util 'first';
 use POE;
 use POE::Component::IRC '6.06';
 use POE::Component::IRC::Common qw(parse_user irc_to_utf8);
@@ -125,13 +126,28 @@ sub _pop_queue {
     $kernel->yield('_shift_queue') if @{ $self->{queue} };
 }
 
+sub _ignoring_channel {
+    my ($self, $chan) = @_; 
+
+    if ($self->{Channels}) {
+        unless ($self->{Own_channel} && $self->_is_own_channel($chan)) {
+            return if !first {
+                $chan = irc_to_utf8($chan) if is_utf8($_);
+                $_ == $chan
+            } @{ $self->{Channels} };
+        }   
+    }   
+    return;
+}
+
 sub S_botcmd_dent {
     my ($self, $irc) = splice @_, 0, 2;
     my $nick  = parse_user( ${ $_[0] } );
     my $chan  = ${ $_[1] };
     my $quote = irc_to_utf8(${ $_[2] });
 
-    return if $quote =~ /^\s*$/;
+    return PCI_EAT_NONE if $self->_ignoring_channel($chan);
+    return PCI_EAT_NONE if $quote =~ /^\s*$/;
     my $pseudo = $self->_pseudonimize($quote);
 
     if (length($pseudo) > 140) {
