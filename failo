@@ -100,7 +100,7 @@ sub _start {
         ));
 
         $irc->plugin_add(Github => Failo::Github->new(
-            bindport => '66699',
+            bindport => '1163',
         ));
 
         $irc->plugin_add(ChanMirror => Failo::ChanMirror->new(
@@ -133,6 +133,24 @@ sub _start {
         #$irc->plugin_add('Old', Failo::Old->new());
         #$irc->plugin_add('Translator', Failo::Translator->new());
         #$irc->plugin_add('Resolver', Failo::Resolver->new());
+
+        $heap->{ircs}{$network} = $irc;
+    }
+
+    for my $network (qw(oftc)) {
+        my $irc = POE::Component::IRC::State->spawn(
+            nick         => $network,
+            password     => $irc_pass,
+            server       => 'localhost',
+            port         => 50444,
+            debug        => 1,
+            plugin_debug => 1,
+        );
+
+        $irc->plugin_add('Connector', POE::Component::IRC::Plugin::Connector->new());
+        $irc->plugin_add(Github => Failo::Github->new(
+            bindport => '1164',
+        ));
 
         $heap->{ircs}{$network} = $irc;
     }
