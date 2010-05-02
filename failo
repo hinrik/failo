@@ -150,6 +150,7 @@ sub _start {
         $irc->plugin_add('Connector', POE::Component::IRC::Plugin::Connector->new());
         $irc->plugin_add(Github => Failo::Github->new(
             bindport => '1164',
+            Method => 'privmsg',
         ));
 
         $heap->{ircs}{$network} = $irc;
