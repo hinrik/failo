@@ -1,5 +1,6 @@
 package Failo::Github;
 
+use 5.010;
 use strict;
 use warnings;
 use CGI::Simple;
@@ -116,11 +117,24 @@ sub _http_handler {
     $irc->yield($self->{Method}, $channel, $header);
 
     # commit messages
+    my @commits;
     for my $commit (@{ $info->{commits} }) {
         my $id = substr $commit->{id}, 0, 7;
         my ($msg) = $commit->{message} =~ /^([^\n]*)/m;
         my $author = $commit->{author}{name};
         my $line = ORANGE."$id ".DARK_GREEN.$author.NORMAL.": $msg";
+        push @commits => $line;
+    }
+
+    # Always show at least three commits
+    my @three = splice @commits, 0, 3;
+    $irc->yield($self->{Method}, $channel, $_) for @three;
+
+    # Maybe we have more
+    if (@commits) {
+        # TODO: Maybe print "... $n more commits by $o authors";
+        my $left = @commits;
+        my $line = "... " . BOLD."$left more commits".NORMAL;
         $irc->yield($self->{Method}, $channel, $line);
     }
 
