@@ -5,6 +5,7 @@ use strict;
 use warnings;
 use CGI::Simple;
 use JSON::XS qw(decode_json);
+use List::MoreUtils qw(uniq);
 use POE;
 use POE::Component::IRC::Common qw(:ALL);
 use POE::Component::Server::SimpleHTTP;
@@ -123,18 +124,23 @@ sub _http_handler {
         my ($msg) = $commit->{message} =~ /^([^\n]*)/m;
         my $author = $commit->{author}{name};
         my $line = ORANGE."$id ".DARK_GREEN.$author.NORMAL.": $msg";
-        push @commits => $line;
+        push @commits => {
+            author => $author,
+            line => $line,
+        };
     }
 
     # Always show at least three commits
     my @three = splice @commits, 0, 3;
-    $irc->yield($self->{Method}, $channel, $_) for @three;
+    $irc->yield($self->{Method}, $channel, $_->{line}) for @three;
 
     # Maybe we have more
     if (@commits) {
         # TODO: Maybe print "... $n more commits by $o authors";
         my $left = @commits;
-        my $line = "... " . BOLD."$left more commits".NORMAL;
+        my $authors = uniq(map { $_->{author} } @commits);
+        my $plural  = $authors == 1 ? 'author' : 'authors';
+        my $line = "... " . BOLD.$left.NORMAL.' more commits by '.BOLD.$authors.NORMAL.' '.$plural;
         $irc->yield($self->{Method}, $channel, $line);
     }
 
