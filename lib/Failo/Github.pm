@@ -137,10 +137,11 @@ sub _http_handler {
     # Maybe we have more
     if (@commits) {
         # TODO: Maybe print "... $n more commits by $o authors";
-        my $left = @commits;
-        my $authors = uniq(map { $_->{author} } @commits);
-        my $plural  = $authors == 1 ? 'author' : 'authors';
-        my $line = "... " . BOLD.$left.NORMAL.' more commits by '.BOLD.$authors.NORMAL.' '.$plural;
+        my $left        = @commits;
+        my $left_txt    = $left == 1 ? 'commit' : 'commits';
+        my $authors     = uniq(map { $_->{author} } @commits);
+        my $authors_txt = $authors == 1 ? 'author' : 'authors';
+        my $line        = "... " . BOLD.$left.NORMAL." more $left_txt by ".BOLD.$authors.NORMAL.' '.$authors_txt;
         $irc->yield($self->{Method}, $channel, $line);
     }
 
