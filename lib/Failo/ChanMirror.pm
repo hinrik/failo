@@ -2,6 +2,7 @@ package Failo::ChanMirror;
 
 use strict;
 use warnings;
+use Encode 'is_utf8';
 use Carp 'croak';
 use File::Spec::Functions 'catfile';
 use List::Util 'first';

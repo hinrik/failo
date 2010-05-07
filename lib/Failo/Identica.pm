@@ -2,6 +2,7 @@ package Failo::Identica;
 
 use strict;
 use warnings;
+use Encode 'is_utf8';
 use List::Util 'first';
 use POE;
 use POE::Component::IRC '6.06';
