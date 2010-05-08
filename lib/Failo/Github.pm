@@ -108,7 +108,7 @@ sub _http_handler {
 
     # header
     my $repo = "$info->{repository}{owner}{name}/$info->{repository}{name}";
-    my ($branch) = $info->{ref} =~ m{/([^/]+)$};
+    my ($branch) = $info->{ref} =~ m{(?<=^refs/heads/)(.*)};
     my $before = substr $info->{before}, 0, 7;
     my $after = substr $info->{after}, 0, 7;
     my $url = @{ $info->{commits} } == 1
