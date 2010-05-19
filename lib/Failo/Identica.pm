@@ -194,7 +194,9 @@ sub S_botcmd_undent {
 sub _pseudonimize {
     my ($self, $quote) = @_;
     while (my ($old, $new) = each %{ $self->{nicks} }) {
-        $quote =~ s/\b(?:fail)?\Q$old\E(?:s|_+)?\b/$new/gi;
+        my $old_up = uc $old;
+        $quote =~ s/\b(fail)?\Q$old_up\E(s)?_*\b/uc "$1$new$2"/eg;
+        $quote =~ s/\b(fail)?\Q$old\E(s)?_*\b/$1$new$2/gi;
     }
     return $quote;
 }
