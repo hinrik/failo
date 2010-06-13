@@ -8,11 +8,24 @@ use POE::Component::IRC::Plugin qw(PCI_EAT_NONE);
 use POE::Wheel::Run;
 
 my $uri_title_code = <<'END';
+use 5.010;
 use strict;
 use warnings;
 use URI::Title qw(title);
 $| = 1;
-print title($ARGV[0]), "\n";
+
+given ($ARGV[0]) {
+    when (m[youtube\.com/watch\?v=(?<id>[A-Za-z0-9]+)]) {
+        require WWW::YouTube::Download;
+        my $client = WWW::YouTube::Download->new;
+        my $title  = $client->get_title($+{id});
+        my $url    = $client->get_video_url($+{id});
+        say "$title - $url";
+    }
+    default {
+        say title($ARGV[0]);
+    }
+}
 END
 
 sub new {
