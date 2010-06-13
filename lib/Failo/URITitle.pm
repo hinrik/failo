@@ -20,7 +20,7 @@ given ($ARGV[0]) {
         my $client = WWW::YouTube::Download->new;
         my $title  = $client->get_title($+{id});
         my $url    = $client->get_video_url($+{id});
-        say "$title - $url";
+        say "YouBoob: $title - $url";
     }
     default {
         say title($ARGV[0]);
