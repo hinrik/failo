@@ -21,10 +21,23 @@ given ($ARGV[0]) {
         my $title  = $client->get_title($+{id});
         my $url    = $client->get_video_url($+{id});
         say "YouBoob: $title - $url";
+        exit;
     }
-    default {
-        say title($ARGV[0]);
+    when (m[//twitter\.com/(?<user>[^/]+)/status/(?<id>\d+)]) {
+        require LWP::Simple;
+        LWP::Simple->import;
+        my $user = $+{user};
+        if (my $content = get($ARGV[0])) {
+            my ($when) = $content =~ m[<span class="published timestamp"[^>]+>(.*?)</span>];
+            my ($twat) = $content =~ m[<meta content="(?<tweet>.*?)" name="description" />];
+            if ($when and $twat) {
+                say "Twat by $user $when: $twat";
+                exit;
+            }
+        }
     }
+
+    say title($ARGV[0]);
 }
 END
 
