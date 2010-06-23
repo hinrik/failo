@@ -113,7 +113,7 @@ sub _uri_title {
     $self->{quickie}->run(
         Program     => $uri_title_code,
         ProgramArgs => [$uri],
-        Copy_inc    => 1,
+        CopyINC     => 1,
         StdoutEvent => '_result',
         Context     => $where,
     );
