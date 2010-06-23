@@ -15,7 +15,7 @@ use URI::Title qw(title);
 $| = 1;
 
 given ($ARGV[0]) {
-    when (m[youtube\.com/watch\?v=(?<id>[A-Za-z0-9]+)]) {
+    when (m[youtube\.com/watch\?v=(?<id>[A-Za-z0-9_]+)]) {
         require WWW::YouTube::Download;
         my $client = WWW::YouTube::Download->new;
         my $title  = $client->get_title($+{id});
