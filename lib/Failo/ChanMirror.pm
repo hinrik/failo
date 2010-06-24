@@ -7,8 +7,8 @@ use Carp 'croak';
 use File::Spec::Functions 'catfile';
 use List::Util 'first';
 use POE;
-use POE::Wheel::Run;
 use POE::Component::IRC::Plugin qw(:ALL);
+use POE::Quickie;
 use YAML::XS qw(LoadFile DumpFile);
 
 our $VERSION = '0.01';
@@ -25,11 +25,11 @@ sub new {
         mkdir $self->{Mirror_dir} or croak "Can't mkdir $self->{Mirror_dir}";
     }
 
-    $self->{urls} = { };
-    $self->{Method} = 'notice' if !defined $self->{Method};
+    $self->{urls}      = { };
+    $self->{Method}    = 'notice' if !defined $self->{Method};
     $self->{Keepalive} = 60*60*24 if !defined $self->{Keepalive};
     $self->{useragent} = 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9b3pre) Gecko/2008020108';
-    $self->{wget_cmd} = [
+    $self->{wget_cmd}  = [
         qw(wget -nv -H -K -r -l 1 -p -E -k -e robots=off -N),
         '-I', '/*/src,/*/thumb,/image/*',
         '-U', $self->{useragent},
@@ -54,9 +54,6 @@ sub PCI_register {
                 _start
                 _mirror_thread
                 _sig_DIE
-                _sig_chld
-                _wget_stderr
-                _wget_close
                 _stop_mirroring
             )],
         ],
@@ -77,6 +74,7 @@ sub PCI_unregister {
 
 sub _start {
     my ($kernel, $session, $self) = @_[KERNEL, SESSION, OBJECT];
+
     $self->{session_id} = $session->ID();
     $kernel->sig(DIE => '_sig_DIE');
     $kernel->refcount_increment($self->{session_id}, __PACKAGE__);
@@ -108,7 +106,7 @@ sub _ignoring_channel {
         unless ($self->{Own_channel} && $self->_is_own_channel($chan)) {
             return if !first {
                 $chan = irc_to_utf8($chan) if is_utf8($_);
-                $_ == $chan
+                $_ eq $chan
             } @{ $self->{Channels} };
         }   
     }   
@@ -145,22 +143,53 @@ sub S_botcmd_chanmirror {
 sub _mirror_thread {
     my ($kernel, $self, $where, $who, $url, $new)
         = @_[KERNEL, OBJECT, ARG0..ARG3];
+    my $irc = $self->{irc};
 
-    my $wheel = POE::Wheel::Run->new(
-        Program     => [@{ $self->{wget_cmd} }, $url],
-        StderrEvent => '_wget_stderr',
-        CloseEvent  => '_wget_close',
-    );
-
-    $self->{urls}{$url} = {
-        wheel => $wheel,
+    my $info = {
         time  => time,
         where => $where,
         who   => $who,
         new   => $new,
     };
+    $self->{urls}{$url} = $info;
 
-    $kernel->sig_child($wheel->PID, '_sig_chld');
+    my ($stdout, $stderr, $exit) = quickie([@{ $self->{wget_cmd} }, $url]);
+
+    my $exit_code = ($exit >> 8);
+    my $max = $info->{time} + $self->{Keepalive};
+
+    if (time > $max || $stderr =~ /ERROR/ || $exit_code != 0) {
+        # stop mirroring and delete the backup file left by wget(1)
+        my $timer = $info->{timer};
+        $kernel->alarm_remove($timer) if defined $timer;
+        delete $self->{urls}{$url};
+        $self->_delete_backup($url);
+
+        if ($new) {
+            my @msg = "Error mirroring $url. Wget exited with status $exit_code";
+            if ($stderr) {
+                $msg[0] .= '. Stderr was:';
+                push @msg, split(/\n/, $stderr);
+            }
+
+            $irc->yield($self->{Method}, $where, "$who: $_") for @msg;
+        }
+
+        return;
+    }
+    elsif (time <= $max) {
+        # schedule the mirror to be updated
+        $info->{timer} = $kernel->delay_set(_mirror_thread => 5*60, $where, $who, $url);
+    }
+
+    # if this is a new mirror, post it to the channel
+    if ($new) {
+        my $mirror = $url;
+        $mirror =~ s[^https?://(.*)][$self->{Mirror_url}$1];
+        $mirror .= '.html' if $url !~ /\.html$/;
+        $irc->yield($self->{Method}, $where, "$who: $mirror");
+    }
+
     return;
 }
 
@@ -174,25 +203,6 @@ sub _save_urls {
     DumpFile($self->{State_file}, \%urls);
 }
 
-sub _wget_stderr {
-    my ($kernel, $self, $output, $id) = @_[KERNEL, OBJECT, ARG0, ARG1];
-
-    return if $output !~ /ERROR/;
-
-    for my $url (keys %{ $self->{urls} }) {
-        if (my $wheel = $self->{urls}{$url}{wheel}) {
-            if ($wheel->ID == $id) {
-                my $timer = $self->{urls}{$url}{timer};
-                $kernel->alarm_remove($timer) if defined $timer;
-                delete $self->{urls}{$url};
-                $self->_delete_backup($url);
-            }
-        }
-    }
-
-    return;
-}
-
 sub _delete_backup {
     my ($self, $html_orig) = @_;
     $html_orig =~ s{^https?://}{}g;
@@ -200,45 +210,6 @@ sub _delete_backup {
     $html_orig = catfile($self->{Mirror_dir}, $html_orig);
     unlink $html_orig if -e $html_orig;
     return;
-}
-
-sub _wget_close {
-    my ($kernel, $self, $id) = @_[KERNEL, OBJECT, ARG0];
-
-    my $url;
-    for my $u (keys %{ $self->{urls} }) {
-        if (my $wheel = $self->{urls}{$u}{wheel}) {
-             if ($wheel->ID == $id) {
-                 $url = $u;
-                 last;
-             }
-        }
-    }
-    return if !defined $url;
-
-    my $info = $self->{urls}{$url};
-    if ($info->{new}) {
-        my $mirror = $url;
-        $mirror =~ s[^https?://(.*)][$self->{Mirror_url}$1];
-        $mirror .= '.html' if $url !~ /\.html$/;
-        $self->{irc}->yield($self->{Method}, $info->{where}, "$info->{who}: $mirror");
-    }
-
-    my $max = $info->{time} + $self->{Keepalive};
-    if (time() > $max) {
-        delete $self->{urls}{$url};
-        $self->_delete_backup($url);
-    }
-    else {
-        delete $info->{wheel};
-        $info->{timer} = $kernel->delay_set(_mirror_thread => 5*60, $info->{where}, $info->{who}, $url);
-    }
-
-    return;
-}
-
-sub _sig_chld {
-    $_[KERNEL]->sig_handled;
 }
 
 sub _stop_mirroring {

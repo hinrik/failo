@@ -63,7 +63,6 @@ sub PCI_register {
             $self => [qw(
                 _start
                 _uri_title
-                _result
             )],
         ],
     );
@@ -82,7 +81,6 @@ sub _start {
     my ($kernel, $self, $session) = @_[KERNEL, OBJECT, SESSION];
     $self->{session_id} = $session->ID();
     $kernel->refcount_increment($self->{session_id}, __PACKAGE__);
-    $self->{quickie} = POE::Quickie->new();
     return;
 }
 
@@ -110,20 +108,12 @@ sub S_urifind_uri {
 sub _uri_title {
     my ($kernel, $self, $where, $uri) = @_[KERNEL, OBJECT, ARG0, ARG1];
 
-    $self->{quickie}->run(
+    my ($title) = quickie(
         Program     => $uri_title_code,
         ProgramArgs => [$uri],
-        CopyINC     => 1,
-        StdoutEvent => '_result',
-        Context     => $where,
+        AltFork     => 1,
     );
-    return;
-}
-
-sub _result {
-    my ($kernel, $self, $title, $where) = @_[KERNEL, OBJECT, ARG0, ARG2];
     $self->{irc}->yield($self->{Method}, $where, $title);
-    return;
 }
 
 1;
