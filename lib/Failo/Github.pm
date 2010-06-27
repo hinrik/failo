@@ -30,7 +30,7 @@ sub PCI_register {
 
 sub PCI_unregister {
     my ($self, $irc) = splice @_, 0, 2;
-    $poe_kernel->call(httpd => 'SHUTDOWN');
+    $poe_kernel->call($self->{httpd_id}, 'SHUTDOWN');
     $poe_kernel->refcount_decrement($self->{session_id}, __PACKAGE__);
     return 1;
 }
@@ -41,8 +41,7 @@ sub _start {
     $kernel->sig(DIE => '_sig_DIE');
     $self->{session_id} = $_[SESSION]->ID();
 
-    POE::Component::Server::SimpleHTTP->new(
-        ALIAS    => 'httpd',
+    $self->{httpd_id} = POE::Component::Server::SimpleHTTP->new(
         PORT     => $self->{bindport} || 0,
         HANDLERS => [
             {
@@ -52,7 +51,7 @@ sub _start {
             },
         ],
         HEADERS => { Server => 'Failo' },
-    );
+    )->get_session_id();
 
     $kernel->refcount_increment($self->{session_id}, __PACKAGE__);
     return;
@@ -74,13 +73,13 @@ sub _http_handler {
 
     # Check for errors
     if (!defined $request) {
-        $kernel->call(httpd => 'DONE', $response);
+        $kernel->call($self->{httpd_id} => 'DONE', $response);
         return;
     }
 
     my $done = sub {
         $response->code(200);
-        $kernel->call(httpd => 'DONE', $response);
+        $kernel->call($self->{httpd_id} => 'DONE', $response);
     };
 
     if ($request->method ne 'POST') {
