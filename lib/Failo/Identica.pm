@@ -134,7 +134,7 @@ sub _ignoring_channel {
         unless ($self->{Own_channel} && $self->_is_own_channel($chan)) {
             return if !first {
                 $chan = irc_to_utf8($chan) if is_utf8($_);
-                $_ == $chan
+                $_ eq $chan
             } @{ $self->{Channels} };
         }   
     }   
