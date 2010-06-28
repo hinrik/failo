@@ -47,11 +47,13 @@ sub PCI_unregister {
 }
 
 sub S_botcmd_tr {
-    my ($self, $irc)   = splice @_, 0, 2;
-    my $nick           = parse_user( ${ $_[0] } );
-    my $chan           = ${ $_[1] };
-    my ($langs, $text) = split /\s+/, ${ $_[2] }, 2;
-    my @langs          = split /,/, $langs;
+    my ($self, $irc)    = splice @_, 0, 2;
+    my $nick            = parse_user( ${ $_[0] } );
+    my $chan            = ${ $_[1] };
+    my ($trans, $langs, $text) = ${ $_[2] } =~ /^(\S+:)?(\S+) (.*)/;
+
+    my @langs = split /,/, $langs;
+    $trans =~ s/:$// if defined $trans;
 
     if (!defined $text) {
         $irc->yield(notice => $chan, "$nick: No text!");
@@ -64,7 +66,7 @@ sub S_botcmd_tr {
     }
 
     $poe_kernel->post($self->{session_id}, translate =>
-        irc_to_utf8($text), $nick, $chan, \@langs);
+        irc_to_utf8($text), $nick, $chan, $trans, \@langs);
     return PCI_EAT_NONE;
 }
 
@@ -76,18 +78,20 @@ sub _start {
 }
 
 sub translate {
-    my ($kernel, $self, $text, $nick, $chan, $langs) = @_[KERNEL, OBJECT, ARG0..ARG3];
+    my ($kernel, $self, $text, $nick, $chan, $trans, $langs)
+        = @_[KERNEL, OBJECT, ARG0..ARG4];
     my $irc = $self->{irc};
     
+    $trans = 'Google' if !defined $trans;
     my $translated;
     while (@$langs > 1) {
         my $from = shift @$langs;
         my $to = $langs->[0];
 
         eval {
-            if (!exists $self->{translators}{$from.$to}) {
-                $self->{translators}{$from.$to} = Lingua::Translate->new(
-                    back_end => 'InterTran',
+            if (!exists $self->{translators}{"$trans+$from+$to"}) {
+                $self->{translators}{"$trans+$from+$to"} = Lingua::Translate->new(
+                    back_end => $trans,
                     src      => $from,
                     dest     => $to,
                 );
@@ -102,7 +106,7 @@ sub translate {
 
         my ($stdout, $stderr, $exit) = quickie(
             sub {
-                print $self->{translators}{$from.$to}->translate($text), "\n";
+                print $self->{translators}{"$trans+$from+$to"}->translate($text), "\n";
             }
         );
 
