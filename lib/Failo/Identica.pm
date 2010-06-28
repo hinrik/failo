@@ -20,10 +20,10 @@ sub new {
     my ($package, %args) = @_;
     my $self = bless \%args, $package;
 
-    $self->{nicks} = LoadFile('map_names.yml');
-    $self->{quotes} = LoadFile('quotes.yml') || [];
-    $self->{identica_pass} = qx/cat identica_pass.txt/;
-    chomp $self->{identica_pass};
+    for my $arg (qw(Channels Username Password Quotes_file)) {
+        die __PACKAGE__ . " requires a $arg parameter\n" if !defined $args{$arg};
+    }
+    $self->{quotes} = LoadFile($self->{Quotes_file}) || [];
 
     return $self;
 }
@@ -32,7 +32,7 @@ sub PCI_register {
     my ($self, $irc) = @_;
     
     if (!$irc->isa('POE::Component::IRC::State')) {
-        die __PACKAGE__ . "requires PoCo::IRC::State or a subclass thereof\n";
+        die __PACKAGE__ . " requires PoCo::IRC::State or a subclass thereof\n";
     }
     
     my $botcmd;
@@ -50,13 +50,13 @@ sub PCI_register {
 
     $self->{irc} = $irc;
     $self->{twit} = Net::Twitter::Lite->new(
-        username   => 'failo',
-        password   => $self->{identica_pass},
-        source     => 'failo',
+        username   => $self->{Username},
+        password   => $self->{Password},
         traits     => ['API::REST'],
         identica   => 1,
-        clientname => 'failo IRC bot',
-        clienturl  => 'http://github.com/hinrik/failo',
+        (defined $self->{Source} ? (source => $self->{Source}) : ()),
+        (defined $self->{ClientName} ? (clientname => $self->{ClientName}) : ()),
+        (defined $self->{ClientUrl} ? (clienturl => $self->{ClientUrl}) : ()),
     );
     $self->{queue} = [ ];
     $irc->plugin_register($self, 'SERVER', qw(botcmd_dent botcmd_undent));
@@ -193,7 +193,9 @@ sub S_botcmd_undent {
 
 sub _pseudonimize {
     my ($self, $quote) = @_;
-    while (my ($old, $new) = each %{ $self->{nicks} }) {
+    return $quote if !$self->{Map_names};
+
+    while (my ($old, $new) = each %{ $self->{Map_names} }) {
         my $old_up = uc $old;
         $quote =~ s/\b(fail)?\Q$old_up\E(s)?_*\b/uc "$1$new$2"/eg;
         $quote =~ s/\b(fail)?\Q$old\E(s)?_*\b/$1$new$2/gi;
