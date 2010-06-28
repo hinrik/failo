@@ -2,10 +2,8 @@ package Failo::Translator;
 
 use strict;
 use warnings;
-use Encode qw(decode);
-use Encode::Guess;
 use POE;
-use POE::Component::IRC::Common qw(parse_user);
+use POE::Component::IRC::Common qw(parse_user irc_to_utf8);
 use POE::Component::IRC::Plugin qw(:ALL);
 use POE::Component::Lingua::Translate;
 
@@ -47,12 +45,6 @@ sub PCI_unregister {
     return 1;
 }
 
-sub to_utf8 {
-    my ($line) = @_;
-    my $utf8 = guess_encoding($line, 'utf8');
-    return ref $utf8 ? decode('utf8', $line) : decode('cp1252', $line);
-}
-
 sub S_botcmd_tr {
     my ($self, $irc)   = splice @_, 0, 2;
     my $nick           = parse_user( ${ $_[0] } );
@@ -61,7 +53,7 @@ sub S_botcmd_tr {
     my @langs          = split /,/, $langs;
 
     $poe_kernel->call($self->{session_id} => translated =>
-        to_utf8($text),
+        irc_to_utf8($text),
         {
             nick    => $nick,
             channel => $chan,
