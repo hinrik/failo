@@ -2,10 +2,11 @@ package Failo::Translator;
 
 use strict;
 use warnings;
+use Lingua::Translate;
 use POE;
 use POE::Component::IRC::Common qw(parse_user irc_to_utf8);
 use POE::Component::IRC::Plugin qw(:ALL);
-use POE::Component::Lingua::Translate;
+use POE::Quickie;
 
 our $VERSION = '0.01';
 
@@ -29,7 +30,7 @@ sub PCI_register {
 
     POE::Session->create(
         object_states => [
-            $self => [ qw(_start translated) ],
+            $self => [ qw(_start translate) ],
         ],
     );
 
@@ -52,14 +53,18 @@ sub S_botcmd_tr {
     my ($langs, $text) = split /\s+/, ${ $_[2] }, 2;
     my @langs          = split /,/, $langs;
 
-    $poe_kernel->call($self->{session_id} => translated =>
-        irc_to_utf8($text),
-        {
-            nick    => $nick,
-            channel => $chan,
-            langs   => \@langs,
-        }
-    );
+    if (!defined $text) {
+        $irc->yield(notice => $chan, "$nick: No text!");
+        return PCI_EAT_NONE;
+    }
+
+    if (@langs < 2) {
+        $irc->yield(notice => $chan, "$nick: Not enough languages!");
+        return PCI_EAT_NONE;
+    }
+
+    $poe_kernel->post($self->{session_id}, translate =>
+        irc_to_utf8($text), $nick, $chan, \@langs);
     return PCI_EAT_NONE;
 }
 
@@ -70,40 +75,45 @@ sub _start {
     return;
 }
 
-sub translated {
-    my ($kernel, $self, $text, $context) = @_[KERNEL, OBJECT, ARG0, ARG1];
+sub translate {
+    my ($kernel, $self, $text, $nick, $chan, $langs) = @_[KERNEL, OBJECT, ARG0..ARG3];
     my $irc = $self->{irc};
-    return if !defined $text;
     
-    if (!@{ $context->{langs} }) {
-        $irc->yield(notice => $context->{channel}, $context->{nick} . ": $text");
-        return;
-    }
-    
-    my ($from, $to) = splice @{ $context->{langs} }, 0, 2;
-    unshift(@{ $context->{langs} }, $to) if @{ $context->{langs} };
+    my $translated;
+    while (@$langs > 1) {
+        my $from = shift @$langs;
+        my $to = $langs->[0];
 
-    if (!exists $self->{translators}->{$from . $to}) {
         eval {
-            $self->{translators}->{$from . $to} = POE::Component::Lingua::Translate->new(
-                alias     => $from . $to,
-                back_end  => 'InterTran',
-                src       => $from,
-                dest      => $to,
-            );
+            if (!exists $self->{translators}{$from.$to}) {
+                $self->{translators}{$from.$to} = Lingua::Translate->new(
+                    back_end => 'InterTran',
+                    src      => $from,
+                    dest     => $to,
+                );
+            }
         };
-        
+
         if ($@) {
-            $irc->yield(privmsg => $context->{chan}, $context->{nick} . ": There was an error: $@");
+            chomp $@;
+            $irc->yield(notice => $chan, "$nick: Error constructing Lingua::Translate: $@");
             return;
         }
+
+        my ($stdout, $stderr, $exit) = quickie(
+            sub {
+                print $self->{translators}{$from.$to}->translate($text), "\n";
+            }
+        );
+
+        if (($exit >> 8) != 0 && defined $stderr) {
+            $irc->yield(notice => $chan, "$nick: Error during translation: $stderr");
+            return;
+        }
+        $translated = $stdout;
     }
 
-    $kernel->post($from . $to => translate =>
-        $text,
-        $context,
-    );
-    
+    $irc->yield(notice => $chan, "$nick: $translated");
     return;
 }
 
