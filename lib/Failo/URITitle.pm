@@ -41,9 +41,9 @@ given ($ARGV[0]) {
             }
         }
     }
-
-    say title($ARGV[0]);
 }
+
+say title($ARGV[0]);
 END
 
 sub new {
