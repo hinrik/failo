@@ -135,7 +135,6 @@ sub _http_handler {
 
     # Maybe we have more
     if (@commits) {
-        # TODO: Maybe print "... $n more commits by $o authors";
         my $left        = @commits;
         my $left_txt    = $left == 1 ? 'commit' : 'commits';
         my $authors     = uniq(map { $_->{author} } @commits);
