@@ -8,6 +8,7 @@ use File::Spec::Functions 'catfile';
 use List::Util 'first';
 use POE;
 use POE::Component::IRC::Plugin qw(:ALL);
+use POE::Component::IRC::Common qw(irc_to_utf8);
 use POE::Quickie;
 use YAML::XS qw(LoadFile DumpFile);
 
