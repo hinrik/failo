@@ -36,7 +36,7 @@ given ($ARGV[0]) {
             my ($twat) = $content =~ m[<meta content="(?<tweet>.*?)" name="description" />];
             $_ = decode_entities($_) for $when, $twat;
             if ($when and $twat) {
-                say "Twat by $user $when: $twat";
+                say "$user $when: $twat";
                 exit;
             }
         }
