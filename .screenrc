@@ -16,5 +16,6 @@ acladd root
 sessionname failo
 screen -t bondage 0 bondage -d -w failo
 screen -t failo   1 pocoirc -c failo/failo_bot.yml
+screen -t hailo   1 pocoirc -c failo/failo_hailo.yml
 select 0
 detach
