@@ -19,14 +19,14 @@ sub PCI_register {
     my ($self, $irc) = @_;
 
     if (!$irc->isa('POE::Component::IRC::State')) {
-        die __PACKAGE__ . "requires PoCo::IRC::State or a subclass thereof\n";
+        die __PACKAGE__ . " requires PoCo::IRC::State or a subclass thereof\n";
     }
 
     my $botcmd;
     if (!(($botcmd) = grep { $_->isa('POE::Component::IRC::Plugin::BotCommand') } values %{ $irc->plugin_list() })) {
-        die __PACKAGE__ . "requires an active BotCommand plugin\n";
+        die __PACKAGE__ . " requires an active BotCommand plugin\n";
     }
-    $botcmd->add(tr => 'Usage: tr <from>,<to> <text>');
+    $botcmd->add(tr => 'Usage: tr [engine:]<lang1>,<lang2>[,<lang3>...] <text>');
 
     POE::Session->create(
         object_states => [
@@ -41,15 +41,14 @@ sub PCI_register {
 
 sub PCI_unregister {
     my ($self, $irc) = @_;
-    delete $self->{irc};
     $poe_kernel->refcount_decrement($self->{session_id}, __PACKAGE__);
     return 1;
 }
 
 sub S_botcmd_tr {
-    my ($self, $irc)    = splice @_, 0, 2;
-    my $nick            = parse_user( ${ $_[0] } );
-    my $chan            = ${ $_[1] };
+    my ($self, $irc) = splice @_, 0, 2;
+    my $nick         = parse_user( ${ $_[0] } );
+    my $chan         = ${ $_[1] };
     my ($trans, $langs, $text) = ${ $_[2] } =~ /^(\S+:)?(\S+) (.*)/;
 
     my @langs = split /,/, $langs;
@@ -65,8 +64,11 @@ sub S_botcmd_tr {
         return PCI_EAT_NONE;
     }
 
-    $poe_kernel->post($self->{session_id}, translate =>
-        irc_to_utf8($text), $nick, $chan, $trans, \@langs);
+    $poe_kernel->post(
+        $self->{session_id},
+        'translate',
+        irc_to_utf8($text), $nick, $chan, $trans, \@langs
+    );
     return PCI_EAT_NONE;
 }
 
@@ -89,8 +91,8 @@ sub translate {
         my $to = $langs->[0];
 
         eval {
-            if (!exists $self->{translators}{"$trans+$from+$to"}) {
-                $self->{translators}{"$trans+$from+$to"} = Lingua::Translate->new(
+            if (!exists $self->{trans}{"$trans+$from+$to"}) {
+                $self->{trans}{"$trans+$from+$to"} = Lingua::Translate->new(
                     back_end => $trans,
                     src      => $from,
                     dest     => $to,
@@ -100,18 +102,26 @@ sub translate {
 
         if ($@) {
             chomp $@;
-            $irc->yield(notice => $chan, "$nick: Error constructing Lingua::Translate: $@");
+            $irc->yield(
+                'notice',
+                $chan,
+                "$nick: Error constructing Lingua::Translate: $@",
+            );
             return;
         }
 
         my ($stdout, $stderr, $exit) = quickie(
             sub {
-                print $self->{translators}{"$trans+$from+$to"}->translate($text), "\n";
+                print $self->{trans}{"$trans+$from+$to"}->translate($text), "\n";
             }
         );
 
         if (($exit >> 8) != 0 && defined $stderr) {
-            $irc->yield(notice => $chan, "$nick: Error during translation: $stderr");
+            $irc->yield(
+                'notice',
+                $chan,
+                "$nick: Error during translation: $stderr",
+            );
             return;
         }
         $translated = $stdout;
@@ -121,3 +131,4 @@ sub translate {
     return;
 }
 
+1;
