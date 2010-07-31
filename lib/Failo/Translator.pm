@@ -18,10 +18,6 @@ sub new {
 sub PCI_register {
     my ($self, $irc) = @_;
 
-    if (!$irc->isa('POE::Component::IRC::State')) {
-        die __PACKAGE__ . " requires PoCo::IRC::State or a subclass thereof\n";
-    }
-
     my $botcmd;
     if (!(($botcmd) = grep { $_->isa('POE::Component::IRC::Plugin::BotCommand') } values %{ $irc->plugin_list() })) {
         die __PACKAGE__ . " requires an active BotCommand plugin\n";
