@@ -30,6 +30,9 @@ hailo \
     --train $dir/trn/all.trn \
     --order 2
 
+echo "Removing temporary files"
+rm -rfv $dir/trn
+
 # Indicate that we're done training
 echo "Done training, creating $ok"
 >$ok
