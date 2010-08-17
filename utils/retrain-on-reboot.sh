@@ -23,7 +23,7 @@ echo "Creating a new brain at $brain"
 hailo \
     --brain $brain \
     --train $trn \
-    --order 4    
+    --order 2
 
 # Indicate that we're done training
 echo "Done training, creating $ok"
