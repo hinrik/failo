@@ -31,7 +31,7 @@ sub new {
     $self->{Keepalive} = 60*60*24 if !defined $self->{Keepalive};
     $self->{useragent} = 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9b3pre) Gecko/2008020108';
     $self->{wget_cmd}  = [
-        qw(wget -nv -H -K -r -l 1 -p -E -k -e robots=off -N),
+        qw(wget -nv -H -K -r -l 1 -p -E -k -e robots=off -N --retry-connrefused),
         '-I', '/*/src,/*/thumb,/image/*',
         '-U', $self->{useragent},
         '-P', $self->{Mirror_dir},
