@@ -170,7 +170,14 @@ sub _mirror_thread {
             my @msg = "Error mirroring $url. Wget exited with status $exit_code";
             if ($stderr) {
                 $msg[0] .= '. Stderr was:';
-                push @msg, split(/\n/, $stderr);
+
+                # try to find the relevant error
+                my @errors = $stderr =~ /^(ERROR.*)/m;
+
+                # fall back on just printing the last line of stderr
+                @errors = $stderr =~ /^??(.+)$/m if !@errors;
+
+                push @msg, @errors;
             }
 
             $irc->yield($self->{Method}, $where, "$who: $_") for @msg;
