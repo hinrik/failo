@@ -165,6 +165,7 @@ sub S_botcmd_dent {
     my $topic_info = $irc->channel_topic($chan);
     my $topic = irc_to_utf8($topic_info->{Value});
     my $new_topic = length($topic) ? "$quote | $topic" : $quote;
+    $new_topic =~ s/ (\|[^|]*)?$//; # remove incomplete quotes from the end
 
     $irc->yield(topic => $chan, $new_topic);
     $poe_kernel->post($self->{session_id}, _push_queue => [$chan, $quote]);
