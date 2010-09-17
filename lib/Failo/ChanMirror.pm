@@ -122,6 +122,7 @@ sub S_botcmd_chanmirror {
 
     return PCI_EAT_NONE if $self->_ignoring_channel($where);
 
+    ($url) = $url =~ /(\S+)/; # we only want the first word
     if (!defined $url || $url !~ m{^http://\S+chan\.org/}) {
         $irc->yield($self->{Method}, $where, "$who: I can't mirror that.");
         return PCI_EAT_NONE;
