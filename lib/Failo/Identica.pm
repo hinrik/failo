@@ -165,6 +165,8 @@ sub S_botcmd_dent {
     my $topic_info = $irc->channel_topic($chan);
     my $topic = irc_to_utf8($topic_info->{Value});
     my $new_topic = length($topic) ? "$quote | $topic" : $quote;
+    my $max_length = $irc->isupport('TOPICLEN');
+    $new_topic = substr $new_topic, 0, $max_length;
     $new_topic =~ s/ (\|[^|]*)?$//; # remove incomplete quotes from the end
 
     $irc->yield(topic => $chan, $new_topic);
