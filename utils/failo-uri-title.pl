@@ -32,7 +32,7 @@ given ($ARGV[0]) {
             }
         }
     }
-    when (m[en\.wikipedia\.org/wiki/(?<article>.+)]) {
+    when (m[(?:enwp\.org|en\.wikipedia\.org/wiki)/(?<article>.+)]) {
         eval {
             require Net::DNS;
             my $res = Net::DNS::Resolver->new(
@@ -54,7 +54,13 @@ given ($ARGV[0]) {
 
             if (my $title = title($_) and
                 my $summary = $wikipedia->($+{article})) {
+
+                # Strip out " - Wikipedia, the free encyclopedia"
                 $title =~ s/ - [^-]+$//;
+
+                # Use enwp.org as an URI shortener instead of a.vu:
+                $summary =~ s[http://\Ka\.vu/w:][enwp.org/];
+
                 say "Wikipedia: $title - $summary";
                 exit;
             }
