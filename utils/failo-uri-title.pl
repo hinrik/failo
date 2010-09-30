@@ -32,6 +32,34 @@ given ($ARGV[0]) {
             }
         }
     }
+    when (m[en\.wikipedia\.org/wiki/(?<article>.+)]) {
+        eval {
+            require Net::DNS;
+            my $res = Net::DNS::Resolver->new(
+                #nameservers => [ qw( ns.na.l.dg.cx ns.eu.l.dg.cx ) ],
+                tcp_timeout => 5,
+                udp_timeout => 5,
+            );
+
+            my $wikipedia = sub {
+                my ($name) = @_;
+                my $q = $res->query("$name.wp.dg.cx", "TXT");
+                if ($q) {
+                    for my $rr ($q->answer) {
+                        next unless $rr->type eq "TXT";
+                        return join "", $rr->char_str_list;
+                    }
+                }
+            };
+
+            if (my $title = title($_) and
+                my $summary = $wikipedia->($+{article})) {
+                $title =~ s/ - [^-]+$//;
+                say "Wikipedia: $title - $summary";
+                exit;
+            }
+        };
+    }
 }
 
 say title($ARGV[0]);
