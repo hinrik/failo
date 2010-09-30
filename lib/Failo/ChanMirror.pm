@@ -35,6 +35,7 @@ sub new {
         '-I', '/*/src,/*/thumb,/image/*',
         '-U', $self->{useragent},
         '-P', $self->{Mirror_dir},
+        '--wait', 0.5,
     ],
 
     return $self;
