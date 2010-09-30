@@ -6,45 +6,8 @@ use Carp qw(croak);
 use POE;
 use POE::Component::IRC::Plugin qw(PCI_EAT_NONE);
 use POE::Quickie;
-
-my $uri_title_code = <<'END';
-use 5.010;
-use strict;
-use warnings;
-use URI::Title qw(title);
-$| = 1;
-
-given ($ARGV[0]) {
-    when (m[youtube\.com/watch\?v=(?<id>[A-Za-z0-9_-]+)]) {
-        eval {
-            require WWW::YouTube::Download;
-            my $client = WWW::YouTube::Download->new;
-            my $title  = $client->get_title($+{id});
-            my $url    = $client->get_video_url($+{id});
-            say "YouBoob: $title - $url";
-            exit;
-        };
-    }
-    when (m[//twitter\.com/(?<user>[^/]+)/status/(?<id>\d+)]) {
-        require LWP::Simple;
-        LWP::Simple->import;
-        require HTML::Entities;
-        HTML::Entities->import;
-        my $user = $+{user};
-        if (my $content = get($ARGV[0])) {
-            my ($when) = $content =~ m[<span class="published timestamp"[^>]+>(.*?)</span>];
-            my ($twat) = $content =~ m[<meta content="(?<tweet>.*?)" name="description" />];
-            $_ = decode_entities($_) for $when, $twat;
-            if ($when and $twat) {
-                say "$user $when: $twat";
-                exit;
-            }
-        }
-    }
-}
-
-say title($ARGV[0]);
-END
+use File::Spec::Functions qw(catdir catfile);
+use Dir::Self;
 
 sub new {
     my ($package, %args) = @_;
@@ -110,10 +73,11 @@ sub S_urifind_uri {
 sub _uri_title {
     my ($kernel, $self, $where, $uri) = @_[KERNEL, OBJECT, ARG0, ARG1];
 
+    my $uri_title_path = catfile(catdir(__DIR__, '..', '..', 'utils'), 'failo-uri-title.pl');
+
     my ($title) = quickie(
-        Program     => $uri_title_code,
+        Program     => $uri_title_path,
         ProgramArgs => [$uri],
-        AltFork     => 1,
     );
     $self->{irc}->yield($self->{Method}, $where, $title);
 }
