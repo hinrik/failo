@@ -8,6 +8,13 @@ use POE::Component::IRC::Common qw(parse_user irc_to_utf8);
 use POE::Component::IRC::Plugin qw(:ALL);
 use POE::Quickie;
 
+# Monkeypatch for Lingua::Translate
+use I18N::LangTags qw(is_language_tag);
+*Lingua::Translate::is_language_tag = sub {
+    my ($tag) = @_;
+    $tag eq 'auto' or is_language_tag($tag);
+};
+
 our $VERSION = '0.01';
 
 sub new {
