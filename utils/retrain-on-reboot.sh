@@ -8,6 +8,13 @@ fail () {
     exit 1
 }
 
+logit () {
+    date +"%Y-%m-%d %H:%M:%S" | tr -d '\n'
+    echo -n " -> "
+    echo "$@"
+}
+
+
 brain=/var/tmp/ramdisk/failo/failo.sqlite
 ok=/var/tmp/ramdisk/failo/failo.trained
 dir="$(dirname $brain)"
@@ -18,21 +25,21 @@ mkdir -p $dir/trn
 for log in '/home/avar/.irssi/logs/freenode/#avar.log ' '/home/avar/.irssi/logs/freenode/#failo.log ' '/home/avar/.irssi/logs/freenode/#hailo.log '; do
     short=$(echo $log | sed 's/.*\#//; s/\.log\s*//')
     to=$dir/trn/$short.trn
-    echo "Training from '$log' to $to"
+    logit "Training from '$log' to $to"
     pv "$log" | irchailo-seed -f irssi -b failo -n failo -r '^,\w' >$to
 done
 
 pv $dir/trn/*.trn > $dir/trn/all.trn
 
-echo "Creating a new brain at $brain"
+logit "Creating a new brain at $brain"
 hailo \
     --brain $brain \
     --train $dir/trn/all.trn \
     --order 2
 
-echo "Removing temporary files"
+logit "Removing temporary files"
 rm -rfv $dir/trn
 
 # Indicate that we're done training
-echo "Done training, creating $ok"
+logit "Done training, creating $ok"
 >$ok
