@@ -16,13 +16,18 @@ given ($ARGV[0]) {
             exit;
         };
     }
-    when (m[//twitter\.com/(?<user>[^/]+)/status/(?<id>\d+)]) {
+    when (m[//twitter\.com/(?:#!/)?(?<user>[^/]+)/status/(?<id>\d+)]) {
         require LWP::Simple;
         LWP::Simple->import;
         require HTML::Entities;
         HTML::Entities->import;
         my $user = $+{user};
-        if (my $content = get($ARGV[0])) {
+        my $url = $ARGV[0];
+
+        # Get rid of NewTwitter fragment AIDS from URLs
+        $url =~ s[/\K#!/][];
+
+        if (my $content = get($url)) {
             my ($when) = $content =~ m[<span class="published timestamp"[^>]+>(.*?)</span>];
             my ($twat) = $content =~ m[<meta content="(?<tweet>.*?)" name="description" />];
             $_ = decode_entities($_) for $when, $twat;
