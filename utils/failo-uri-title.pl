@@ -3,7 +3,8 @@ use 5.010;
 use strict;
 use warnings;
 use URI::Title qw(title);
-$| = 1;
+
+STDOUT->autoflush(1);
 
 given ($ARGV[0]) {
     when (m[youtube\.com/watch\?v=(?<id>[A-Za-z0-9_-]+)]) {
