@@ -36,6 +36,16 @@ given ($ARGV[0]) {
             exit;
         }
     }
+    when (m[//twitter\.com/(?<user>[^?/]+)]) {
+        my $twat = (scraper {
+            process q[//meta[@name="description"]], content => '@content';
+        })->scrape(URI->new($ARGV[0]));
+
+        if ($+{user} and ref $twat eq 'HASH') {
+            say "$+{user} - $twat->{content}";
+            exit;
+        }
+    }
     when (m[(?:enwp\.org|en\.wikipedia\.org/wiki)/(?<article>.+)]) {
         eval {
             require Net::DNS;
