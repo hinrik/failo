@@ -3,6 +3,8 @@ use 5.010;
 use strict;
 use warnings;
 use URI::Title qw(title);
+use URI;
+use Web::Scraper;
 
 STDOUT->autoflush(1);
 
@@ -18,24 +20,20 @@ given ($ARGV[0]) {
         };
     }
     when (m[//twitter\.com/(?:#!/)?(?<user>[^/]+)/status/(?<id>\d+)]) {
-        require LWP::Simple;
-        LWP::Simple->import;
-        require HTML::Entities;
-        HTML::Entities->import;
         my $user = $+{user};
-        my $url = $ARGV[0];
 
+        my $url = $ARGV[0];
         # Get rid of NewTwitter fragment AIDS from URLs
         $url =~ s[/\K#!/][];
 
-        if (my $content = get($url)) {
-            my ($when) = $content =~ m[<span class="published timestamp"[^>]+>(.*?)</span>];
-            my ($twat) = $content =~ m[<meta content="(?<tweet>.*?)" name="description" />];
-            $_ = decode_entities($_) for $when, $twat;
-            if ($when and $twat) {
-                say "$user $when: $twat";
-                exit;
-            }
+        my $twat = (scraper {
+            process q[span[class="published timestamp"]], when => 'TEXT';
+            process q[//meta[@name="description"]],       content => '@content';
+        })->scrape(URI->new($url));
+
+        if (ref $twat eq 'HASH') {
+            say "$user $twat->{when}: $twat->{content}";
+            exit;
         }
     }
     when (m[(?:enwp\.org|en\.wikipedia\.org/wiki)/(?<article>.+)]) {
