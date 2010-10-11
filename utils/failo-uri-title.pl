@@ -9,16 +9,6 @@ use Web::Scraper;
 STDOUT->autoflush(1);
 
 given ($ARGV[0]) {
-    when (m[youtube\.com/watch\?v=(?<id>[A-Za-z0-9_-]+)]) {
-        eval {
-            require WWW::YouTube::Download;
-            my $client = WWW::YouTube::Download->new;
-            my $title  = $client->get_title($+{id});
-            my $url    = $client->get_video_url($+{id});
-            say "YouBoob: $title - $url";
-            exit;
-        };
-    }
     when (m[//twitter\.com/(?:#!/)?(?<user>[^/]+)/status/(?<id>\d+)]) {
         my $user = $+{user};
 
