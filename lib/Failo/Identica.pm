@@ -117,7 +117,7 @@ sub _shift_queue {
 
     # save the quote locally
     push @{ $self->{quotes} }, $quote;
-    DumpFile('quotes.yml', $self->{quotes});
+    DumpFile($self->{Quotes_file}, $self->{quotes});
 }
 
 sub _pop_queue {
