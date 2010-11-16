@@ -119,7 +119,7 @@ sub _post_update {
     eval { $self->{twit}->update($quote) };
 
     if (blessed($@) && $@->isa('Net::Twitter::Lite::Error')) {
-        die $@->error();
+        die $@->error()."\n";
     }
     elsif ($@) {
         chomp $@;
