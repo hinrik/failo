@@ -2,6 +2,7 @@ package Failo::Identica;
 
 use strict;
 use warnings;
+use utf8;
 use Encode 'is_utf8';
 use List::Util 'first';
 use POE;
@@ -91,14 +92,9 @@ sub _shift_queue {
     my $pseudo = $self->_pseudonimize($quote);
 
     # post the quote as a status update
-    my (undef, undef, $status) = quickie(sub { $self->{twit}->update($pseudo) });
+    my (undef, $stderr, $exit_status) = quickie(sub { $self->_post_update($quote) });
 
-    if (($status >> 8) != 0) {
-        if (!blessed($@) || !$@->isa('Net::Twitter::Error::Lite')) {
-            $irc->yield(notice => $chan, "Unknown Net::Twitter::Lite error: $@");
-            return;
-        }
-
+    if ($exit_status) {
         # remove quote from topic
         my $topic_info = $irc->channel_topic($chan);
         my $topic = irc_to_utf8($topic_info->{Value});
@@ -106,18 +102,31 @@ sub _shift_queue {
             $irc->yield(topic => $chan, $topic);
         }
 
+        # print the error
         my ($short) = $quote =~ /(.{0,50})/;
-        $irc->yield(notice => $chan, "Failed to post quote '$short...': " . $@->error());
-
-        warn "HTTP Response Code: ", $@->code(), "\n",
-            "HTTP Message......: ", $@->message(), "\n",
-            "Twitter error.....: ", $@->error(), "\n";
+        $irc->yield(notice => $chan, "Couldn't post quote '$short…': $stderr");
         return;
     }
 
     # save the quote locally
     push @{ $self->{quotes} }, $quote;
     DumpFile($self->{Quotes_file}, $self->{quotes});
+}
+
+sub _post_update {
+    my ($self, $quote) = @_;
+
+    eval { $self->{twit}->update($quote) };
+
+    if (blessed($@) && $@->isa('Net::Twitter::Lite::Error')) {
+        die $@->error();
+    }
+    elsif ($@) {
+        chomp $@;
+        die "$@\n";
+    }
+
+    return;
 }
 
 sub _pop_queue {
