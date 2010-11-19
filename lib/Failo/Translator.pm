@@ -10,10 +10,13 @@ use POE::Quickie;
 
 # Monkeypatch for Lingua::Translate
 use I18N::LangTags qw(is_language_tag);
-*Lingua::Translate::is_language_tag = sub {
-    my ($tag) = @_;
-    $tag eq 'auto' or is_language_tag($tag);
-};
+{
+    no warnings 'redefine';
+    *Lingua::Translate::is_language_tag = sub {
+        my ($tag) = @_;
+        $tag eq 'auto' or is_language_tag($tag);
+    };
+}
 
 our $VERSION = '0.01';
 
