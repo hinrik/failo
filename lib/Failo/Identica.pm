@@ -174,9 +174,13 @@ sub S_botcmd_dent {
     my $topic_info = $irc->channel_topic($chan);
     my $topic = irc_to_utf8($topic_info->{Value});
     my $new_topic = length($topic) ? "$quote | $topic" : $quote;
-    my $max_length = $irc->isupport('TOPICLEN');
-    $new_topic = substr $new_topic, 0, $max_length;
-    $new_topic =~ s/ (\|[^|]*)?$//; # remove incomplete quotes from the end
+
+    # remove incomplete quote from the end
+    if (my $max_length = $irc->isupport('TOPICLEN')) {
+        while (length ($new_topic) >= $max_length) {
+            last unless $new_topic =~ s/ \|[^|]+$//;
+        }
+    }
 
     $irc->yield(topic => $chan, $new_topic);
     $poe_kernel->post($self->{session_id}, _push_queue => [$chan, $quote]);
