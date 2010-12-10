@@ -43,3 +43,5 @@ rm -rfv $dir/trn
 # Indicate that we're done training
 logit "Done training, creating $ok"
 >$ok
+
+mv -v $brain /home/failo/failo/brain.sqlite
