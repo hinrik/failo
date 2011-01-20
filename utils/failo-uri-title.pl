@@ -8,6 +8,15 @@ use Web::Scraper;
 
 STDOUT->autoflush(1);
 
+# What a glorious hack, but apparently there's no other way to modify
+# the Web::Scraper LWP object.
+Web::Scraper::user_agent->default_header(
+    # Because some sites (like a popular hotel site) assume that a
+    # user with just "en" in Accept-Language means they haven't
+    # actually set "en" and can fall back to GeoIP.
+    'Accept-Language' => "en, is"
+);
+
 given ($ARGV[0]) {
     when (m[//twitter\.com/(?:#!/)?(?<user>[^/]+)/status/(?<id>\d+)]) {
         my $user = $+{user};
