@@ -213,6 +213,7 @@ sub _pseudonimize {
 
     while (my ($old, $new) = each %{ $self->{Map_names} }) {
         my $old_up = uc $old;
+	no warnings 'uninitialized';
         $quote =~ s/\b(fail)?\Q$old_up\E(s)?_*\b/uc "$1$new$2"/eg;
         $quote =~ s/\b(fail)?\Q$old\E(s)?_*\b/$1$new$2/gi;
     }
