@@ -15,8 +15,8 @@ logit () {
 }
 
 
-brain=/var/tmp/ramdisk/failo/failo.sqlite
-ok=/var/tmp/ramdisk/failo/failo.trained
+brain=/dev/shm/failo.sqlite
+ok=/dev/shm/failo.trained
 dir="$(dirname $brain)"
 
 mkdir -p $dir
