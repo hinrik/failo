@@ -3,7 +3,9 @@ package Failo::Identica;
 use strict;
 use warnings;
 use utf8;
+use Cwd 'abs_path';
 use Encode 'is_utf8';
+use File::Glob ':glob';
 use List::Util 'first';
 use POE;
 use POE::Component::IRC '6.06';
@@ -24,6 +26,7 @@ sub new {
     for my $arg (qw(Channels Username Password Quotes_file)) {
         die __PACKAGE__ . " requires a $arg parameter\n" if !defined $args{$arg};
     }
+    $self->{Quotes_file} = abs_path(bsd_glob($self->{Quotes_file}));
     $self->{quotes} = LoadFile($self->{Quotes_file}) || [];
 
     return $self;

@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use Encode 'is_utf8';
 use Carp 'croak';
+use Cwd 'abs_path';
+use File::Glob ':glob';
 use File::Spec::Functions 'catfile';
 use List::Util 'first';
 use POE;
@@ -22,8 +24,11 @@ sub new {
     croak 'No mirror url defined' if !defined $self->{Mirror_url};
     croak 'No state file defined' if !defined $self->{State_file};
 
+    $self->{State_file} = abs_path(bsd_glob($self->{State_file}));
+    $self->{Mirror_dir} = bsd_glob($self->{Mirror_dir});
     if (!-d $self->{Mirror_dir}) {
         mkdir $self->{Mirror_dir} or croak "Can't mkdir $self->{Mirror_dir}";
+        $self->{Mirror_dir} = abs_path($self->{Mirror_dir});
     }
 
     $self->{urls}      = { };
