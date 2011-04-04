@@ -13,6 +13,10 @@ caption always "%{= kw}%-w%{= gW}%n %t%{-}%+w %-= %{= r}%H%{-} %{= g}%l%{-} %D %
 multiuser on
 acladd root
 
+# leave window open after command is finished,
+# destroy with 'd', resurrect with 'r'
+zombie dr
+
 sessionname failo
 #screen -t proxy   0 pocoirc -f .pocoircrc.d/failo_proxy.yml
 screen -t bot     1 pocoirc -f .pocoircrc.d/failo_bot.yml
