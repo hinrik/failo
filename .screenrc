@@ -19,6 +19,6 @@ zombie dr
 
 sessionname failo
 #screen -t proxy   0 pocoirc -f .pocoircrc.d/failo_proxy.yml
-screen -t bot     1 pocoirc -f .pocoircrc.d/failo_bot.yml
+screen -t bot     1 pocoirc -itv -f .pocoircrc.d/failo_bot.yml
 select 0
 detach
