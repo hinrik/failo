@@ -27,7 +27,8 @@ sub PCI_register {
         object_states => [
             $self => [qw(
                 _start
-                _uri_title
+                uri_title
+                got_result
             )],
         ],
     );
@@ -66,20 +67,60 @@ sub S_urifind_uri {
         return PCI_EAT_NONE if $uri =~ $match;
     }
 
-    POE::Kernel->post($self->{session_id}, '_uri_title', $where, $uri);
+    $poe_kernel->post($self->{session_id}, 'uri_title', $where, $uri);
     return PCI_EAT_NONE;
 }
 
-sub _uri_title {
+sub uri_title {
     my ($kernel, $self, $where, $uri) = @_[KERNEL, OBJECT, ARG0, ARG1];
 
-    my $uri_title_path = catfile(catdir(__DIR__, '..', '..', 'utils'), 'failo-uri-title.pl');
+    my $place = 0;
 
-    my ($title) = quickie(
-        Program     => $uri_title_path,
+    # the ImageMirror plugin provides image titles
+    if ($uri !~ /(?i:jpe?g|gif|png)$/) {
+        # find the title
+        quickie_run(
+            Program     => catfile(catdir(__DIR__, '..', '..', 'utils'), 'failo-uri-title.pl'),
+            ProgramArgs => [$uri],
+            ResultEvent => 'got_result',
+            Context     => {
+                uri   => $uri,
+                place => $place,
+                total => 2,
+            },
+        );
+        $place++;
+    }
+
+    # check if there's a reddit thread for this uri
+    quickie_run(
+        Program     => catfile(catdir(__DIR__, '..', '..', 'utils'), 'failo-reddit-thread.pl'),
         ProgramArgs => [$uri],
+        ResultEvent => 'got_result',
+        Context     => {
+            uri   => $uri,
+            place => $place,
+            total => $place+1,
+            where => $where,
+        },
     );
-    $self->{irc}->yield($self->{Method}, $where, $title);
+
+    return;
+}
+
+sub got_result {
+    my ($self, $stdout, $ctx) = @_[OBJECT, ARG1, ARG5];
+
+    chomp $stdout;
+    $self->{uris}{$ctx->{uri}}[$ctx->{place}] = $stdout;
+
+    if (@{ $self->{uris}{$ctx->{uri}} } == $ctx->{total}) {
+        for my $output (@{ $self->{uris}{$ctx->{uri}} }) {
+            if (length $output) {
+                $self->{irc}->yield($self->{Method}, $ctx->{where}, $output);
+            }
+        }
+    }
 }
 
 1;
