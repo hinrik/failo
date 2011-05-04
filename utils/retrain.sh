@@ -34,7 +34,7 @@ pv $dir/trn/*.trn > $dir/trn/all.trn
 logit "Creating a new brain at $brain"
 hailo \
     --brain $brain \
-    --train $dir/trn/all.trn \
+    --train-fast $dir/trn/all.trn \
     --order 2
 
 logit "Removing temporary files"
