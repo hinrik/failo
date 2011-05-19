@@ -6,6 +6,7 @@ use URI::Title qw(title);
 use URI;
 use Web::Scraper;
 
+binmode STDOUT, ":utf8";
 STDOUT->autoflush(1);
 
 # What a glorious hack, but apparently there's no other way to modify
