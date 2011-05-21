@@ -92,7 +92,6 @@ sub _shift_queue {
     my $self = $_[OBJECT];
     my $irc = $self->{irc};
     my ($chan, $quote) = @{ shift @{ $self->{queue} } };
-    my $pseudo = $self->_pseudonimize($quote);
 
     # post the quote as a status update
     my (undef, $stderr, $exit_status) = quickie(sub { $self->_post_update($quote) });
@@ -118,8 +117,9 @@ sub _shift_queue {
 
 sub _post_update {
     my ($self, $quote) = @_;
+    my $pseudo = $self->_pseudonimize($quote);
 
-    eval { $self->{twit}->update($quote) };
+    eval { $self->{twit}->update($pseudo) };
 
     if (blessed($@) && $@->isa('Net::Twitter::Lite::Error')) {
         die $@->error()."\n";
