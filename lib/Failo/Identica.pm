@@ -106,7 +106,8 @@ sub _shift_queue {
 
         # print the error
         my ($short) = $quote =~ /(.{0,50})/;
-        $irc->yield(notice => $chan, "Couldn't post quote '$short…': $stderr");
+        $short .= '…' if length($short) < length($quote);
+        $irc->yield(notice => $chan, "Couldn't post quote '$short': $stderr");
         return;
     }
 
