@@ -26,5 +26,6 @@ if ($response->is_success()) {
         @{ $content->{data}{children} };
     my $data = $thread->{data};
     exit if $data->{num_comments} < 250;
+    exit if $data->{downs} / $data->{ups} > 0.8;
     say "/r/$data->{subreddit}: $data->{title} - http://redd.it/$data->{id}";
 }
