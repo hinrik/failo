@@ -4,6 +4,7 @@ use 5.010;
 use strict;
 use warnings;
 use CGI::Simple;
+binmode STDOUT, ':utf8'; # damn CGI::Simple does "binmode STDOUT;"
 use JSON::XS qw(decode_json);
 use List::MoreUtils qw(uniq);
 use POE;
