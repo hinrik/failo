@@ -111,7 +111,7 @@ sub uri_title {
 sub got_result {
     my ($self, $stdout, $ctx) = @_[OBJECT, ARG1, ARG5];
 
-    chomp $stdout;
+    $stdout = $stdout->[0];
     $self->{uris}{$ctx->{uri}}[$ctx->{place}] = $stdout;
 
     if (@{ $self->{uris}{$ctx->{uri}} } == $ctx->{total}) {
