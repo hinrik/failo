@@ -25,6 +25,7 @@ if ($response->is_success()) {
     my ($thread) = sort { $b->{data}{num_comments} <=> $a->{data}{num_comments} }
         @{ $content->{data}{children} };
     my $data = $thread->{data};
+    $data->{title} =~ s/\n//g; # some titles have newlines for some reason
     exit if $data->{num_comments} < 250;
     exit if $data->{downs} / $data->{ups} > 0.8;
     say "/r/$data->{subreddit}: $data->{title} - http://redd.it/$data->{id}";
