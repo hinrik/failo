@@ -12,7 +12,7 @@ use POE::Component::IRC '6.06';
 use POE::Component::IRC::Common qw(parse_user irc_to_utf8);
 use POE::Component::IRC::Plugin qw(:ALL);
 use POE::Quickie;
-use Net::Twitter::Lite;
+use Net::Twitter;
 use Scalar::Util qw(blessed);
 use String::Approx qw(adist);
 use YAML::XS qw(LoadFile DumpFile);
@@ -23,7 +23,7 @@ sub new {
     my ($package, %args) = @_;
     my $self = bless \%args, $package;
 
-    for my $arg (qw(Channels Username Password Quotes_file)) {
+    for my $arg (qw(Channels Quotes_file ConsumerKey ConsumerSecret AccessToken AccessTokenSecret)) {
         die __PACKAGE__ . " requires a $arg parameter\n" if !defined $args{$arg};
     }
     $self->{Quotes_file} = abs_path(bsd_glob($self->{Quotes_file}));
@@ -53,14 +53,12 @@ sub PCI_register {
     );
 
     $self->{irc} = $irc;
-    $self->{twit} = Net::Twitter::Lite->new(
-        username   => $self->{Username},
-        password   => $self->{Password},
-        traits     => ['API::REST'],
-        identica   => 1,
-        (defined $self->{Source} ? (source => $self->{Source}) : ()),
-        (defined $self->{ClientName} ? (clientname => $self->{ClientName}) : ()),
-        (defined $self->{ClientUrl} ? (clienturl => $self->{ClientUrl}) : ()),
+    $self->{twit} = Net::Twitter->new(
+        traits              => [qw(API::RESTv1_1)],
+        consumer_key        => $self->{ConsumerKey},
+        consumer_secret     => $self->{ConsumerSecret},
+        access_token        => $self->{AccessToken},
+        access_token_secret => $self->{AccessTokenSecret},
     );
     $self->{queue} = [ ];
     $irc->plugin_register($self, 'SERVER', qw(botcmd_dent botcmd_undent));
@@ -122,7 +120,7 @@ sub _post_update {
 
     eval { $self->{twit}->update($pseudo) };
 
-    if (blessed($@) && $@->isa('Net::Twitter::Lite::Error')) {
+    if (blessed($@) && $@->isa('Net::Twitter::Error')) {
         die $@->error()."\n";
     }
     elsif ($@) {
