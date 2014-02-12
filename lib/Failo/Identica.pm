@@ -55,6 +55,7 @@ sub PCI_register {
     $self->{irc} = $irc;
     $self->{twit} = Net::Twitter->new(
         traits              => [qw(API::RESTv1_1)],
+        ssl                 => 1,
         consumer_key        => $self->{ConsumerKey},
         consumer_secret     => $self->{ConsumerSecret},
         access_token        => $self->{AccessToken},
